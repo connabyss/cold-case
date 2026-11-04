@@ -41,6 +41,8 @@ function onClock(iso, ref){
   const sgn = off[0]==='-'?-1:1, mins = sgn*(+off.slice(1,3)*60 + +off.slice(4,6));
   return new Date(Date.parse(iso) + mins*60e3).toISOString().slice(0,19) + off;
 }
+// how long ago something happened, measured now (the page may have been open a while)
+function ago(t){ const ms = (LIVE ? Date.now() : NOW.getTime()) - t; return ms < 60e3 ? 'moments ago' : span(ms) + ' ago'; }
 function span(ms){
   const min = Math.round(ms/60e3);
   if (min < 1) { const s = Math.round(ms/1000); return s < 2 ? 'a second' : s + ' seconds'; }
@@ -321,12 +323,15 @@ function render(name){
     X.archived ? `${X.archived} were laid to rest properly (archived). The rest were just left there.` : null,
     X.total > X.listedAll + 5 ? `Only the newest ${X.listedAll} were searched. ${(X.total - X.listedAll).toLocaleString()} more are still in the basement.` : null,
   ].filter(Boolean) : [];
-  const mo0 = dead.length ? profile(dead) : all.length ? [`No bodies found. Suspiciously clean.`, `${all.length} public project${all.length===1?'':'s'}, all still breathing.`, `Most recent sign of life: ${span(NOW - Math.max(...all.map(c=>Date.parse(c.repo.pushed))))} ago.`, `The unit will keep an eye on this one.`] : [`No public projects. No bodies. No fingerprints.`, `Either innocent or very careful.`];
+  // one count everywhere: projects shown as breathing plus the unopened ones still breathing
+  const more = X ? X.breathing.filter(n => !alive.some(c => c.repo.name === n) && !dead.some(c => c.repo.name === n)).length : 0;
+  const breathingN = alive.length + more;
+  const mo0 = dead.length ? profile(dead) : all.length ? [`No bodies found. Suspiciously clean.`, `${all.length} public project${all.length===1?'':'s'}, all still breathing.`, `Most recent sign of life: ${ago(Math.max(...all.map(c=>Date.parse(c.repo.pushed))))}.`, `The unit will keep an eye on this one.`] : [`No public projects. No bodies. No fingerprints.`, `Either innocent or very careful.`];
   const mo = X ? big.concat(mo0.filter(l => !/^Total commits|^First known/.test(l))).slice(0, 6) : mo0;
   out.innerHTML = `<section class="rap poster" aria-label="Wanted poster">
     <div class="wanted">WANTED <span>for questioning</span></div>
     <div class="mug">${s.avatar ? `<img src="${s.avatar}" alt="">` : `<div class="noface">?</div>`}<div class="board">${esc(shown.toUpperCase())}</div></div>
-    <div><div class="k">In connection with</div><div class="count">${bodies.toLocaleString()}</div><div class="k">project death${bodies===1?'':'s'} · ${X ? X.breathing.length : alive.length} still breathing</div>
+    <div><div class="k">In connection with</div><div class="count">${bodies.toLocaleString()}</div><div class="k">project death${bodies===1?'':'s'} · ${breathingN.toLocaleString()} still breathing</div>
     <div class="k" style="margin-top:14px">Known M.O.</div>
     <ul class="priors">${mo.map(p=>`<li>${esc(p)}</li>`).join('')}</ul></div>
     <div class="stamp">${bodies >= 50 ? 'MOST WANTED' : bodies ? (bodies >= 3 ? 'SERIAL OFFENDER' : 'PERSON OF INTEREST') : 'CLEAN RECORD'}</div></section>
@@ -348,13 +353,12 @@ function render(name){
   const mk = document.getElementById('mkcard');
   if (mk) mk.onclick = async () => { mk.disabled = true; mk.textContent = 'DEVELOPING…'; SFX.thud();
     const ex = dead[0] && dead[0].clues[0] ? ['Exhibit A: ' + dead[0].clues[0].text.replace(/<[^>]+>/g,'').replace(/&quot;/g,'"').replace(/&amp;/g,'&')] : [];
-    const url = await shareCard(s, shown, dead, alive, mo.slice(0,2).concat(ex)); mk.disabled = false; mk.textContent = 'THIS IS ME: MAKE MY POSTER'; showCard(url, shown); };
+    const url = await shareCard(s, shown, bodies, breathingN, mo.slice(0,2).concat(ex)); mk.disabled = false; mk.textContent = 'THIS IS ME: MAKE MY POSTER'; showCard(url, shown); };
   const th = thoughts(dead);
   if (bodies >= 100) th.splice(0, th.length, {at: 0, text: `${bodies.toLocaleString()} files. I'm going to need a bigger desk.`}, ...th.filter(t => t.at > 0).slice(0,1));
   if (dead.length) out.appendChild(stack(dead, X && bodies > dead.length ? `THE ${dead.length} MOST NOTABLE OF ${bodies.toLocaleString()}` : 'THE VICTIMS', {thoughts: th, court: () => court(shown, dead, alive, out)}));
   else out.insertAdjacentHTML('beforeend', `<p class="thought">${all.length ? `${all.length} project${all.length===1?'':'s'}, all still breathing. I don't trust it.` : `Nothing here. You can't kill a project you never started.`}</p>`);
-  const more = X ? X.breathing.filter(n => !alive.some(c => c.repo.name === n) && !dead.some(c => c.repo.name === n)).length : 0;
-  if (alive.length) out.insertAdjacentHTML('beforeend', `<p class="alive">Still breathing: ${alive.slice(0,10).map(c=>`<b>${esc(c.repo.name)}</b> (last touched ${span(NOW - Date.parse(c.repo.pushed))} ago)`).join(', ')}${more ? `, and ${more} more` : ''}. For now.</p>`);
+  if (alive.length) out.insertAdjacentHTML('beforeend', `<p class="alive">Still breathing: ${alive.slice(0,10).map(c=>`<b>${esc(c.repo.name)}</b> (last touched ${ago(Date.parse(c.repo.pushed))})`).join(', ')}${more ? `, and ${more} more` : ''}. For now.</p>`);
 }
 document.getElementById('intake').addEventListener('submit', e => { e.preventDefault(); openSuspect(document.getElementById('who').value.trim().replace(/^@/,'')); });
 document.querySelectorAll('[data-open]').forEach(b => b.addEventListener('click', () => openSuspect(b.dataset.open)));

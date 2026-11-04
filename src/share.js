@@ -1,5 +1,5 @@
 // ===== Share card: the owner's stamped WANTED poster as a 1200x630 image =====
-async function shareCard(s, name, dead, alive, mo){
+async function shareCard(s, name, deadN, aliveN, mo){
   try { await Promise.all(['900 80px "Big Shoulders Stencil Display"','400 20px "Courier Prime"','700 20px "Courier Prime"'].map(f => document.fonts.load(f))); } catch(e) {}
   const W = 1200, Hh = 630, cv = document.createElement('canvas'); cv.width = W*2; cv.height = Hh*2;
   const g = cv.getContext('2d'); g.scale(2,2);
@@ -26,8 +26,8 @@ async function shareCard(s, name, dead, alive, mo){
   // count + M.O.
   const cx = mx+ms+40; g.textAlign = 'left';
   g.fillStyle = '#6b5a40'; g.font = `400 14px ${TYPE}`; g.fillText('IN CONNECTION WITH', cx, my+14);
-  g.fillStyle = '#a8261d'; g.font = `900 110px ${DISP}`; g.fillText(String(dead.length), cx, my+118);
-  g.fillStyle = '#6b5a40'; g.font = `400 14px ${TYPE}`; g.fillText(`PROJECT DEATH${dead.length===1?'':'S'} · ${alive.length} STILL BREATHING`, cx, my+142);
+  g.fillStyle = '#a8261d'; g.font = `900 110px ${DISP}`; g.fillText(deadN.toLocaleString(), cx, my+118);
+  g.fillStyle = '#6b5a40'; g.font = `400 14px ${TYPE}`; g.fillText(`PROJECT DEATH${deadN===1?'':'S'} · ${aliveN.toLocaleString()} STILL BREATHING`, cx, my+142);
   g.fillStyle = '#2a2118'; g.font = `400 19px ${TYPE}`;
   mo.slice(0,3).forEach((line, i) => { let t = line; while (g.measureText(t).width > pw-(cx-px)-60 && t.length > 10) t = t.slice(0,-2); if (t !== line) t = t.trimEnd() + '…'; g.fillText(t, cx, my+180+i*30); });
   // stamps that are on the live poster right now

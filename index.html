@@ -65,7 +65,8 @@ footer{margin-top:50px;color:var(--dim);font-size:13px;max-width:70ch}
 .wanted span{display:block;font-size:.26em;letter-spacing:.4em;margin-top:6px}
 .count{font:900 84px/.9 var(--display);color:var(--stamp)}
 .noface{width:150px;height:150px;border:3px solid var(--ink);display:grid;place-items:center;font:900 90px var(--display);color:var(--ink-soft);background:repeating-linear-gradient(0deg,transparent 0 18px,rgba(42,33,24,.15) 18px 19px)}
-.poster .stamp{top:auto;bottom:22px}
+.poster{padding-bottom:84px}
+.poster .stamp{top:auto;bottom:26px}
 .witness{margin-top:14px;padding:10px 12px;border:1px dashed var(--ink-soft)}
 .funeral{margin-top:12px;font-style:italic;color:var(--ink-soft)}
 .stack{margin-top:10px;scroll-margin-top:16px}
@@ -160,6 +161,8 @@ function onClock(iso, ref){
   const sgn = off[0]==='-'?-1:1, mins = sgn*(+off.slice(1,3)*60 + +off.slice(4,6));
   return new Date(Date.parse(iso) + mins*60e3).toISOString().slice(0,19) + off;
 }
+// how long ago something happened, measured now (the page may have been open a while)
+function ago(t){ const ms = (LIVE ? Date.now() : NOW.getTime()) - t; return ms < 60e3 ? 'moments ago' : span(ms) + ' ago'; }
 function span(ms){
   const min = Math.round(ms/60e3);
   if (min < 1) { const s = Math.round(ms/1000); return s < 2 ? 'a second' : s + ' seconds'; }
@@ -514,7 +517,7 @@ document.addEventListener('pointerdown', () => SFX.start(), {once:true});
 document.addEventListener('keydown', () => SFX.start(), {once:true});
 
 // ===== Share card: the owner's stamped WANTED poster as a 1200x630 image =====
-async function shareCard(s, name, dead, alive, mo){
+async function shareCard(s, name, deadN, aliveN, mo){
   try { await Promise.all(['900 80px "Big Shoulders Stencil Display"','400 20px "Courier Prime"','700 20px "Courier Prime"'].map(f => document.fonts.load(f))); } catch(e) {}
   const W = 1200, Hh = 630, cv = document.createElement('canvas'); cv.width = W*2; cv.height = Hh*2;
   const g = cv.getContext('2d'); g.scale(2,2);
@@ -541,8 +544,8 @@ async function shareCard(s, name, dead, alive, mo){
   // count + M.O.
   const cx = mx+ms+40; g.textAlign = 'left';
   g.fillStyle = '#6b5a40'; g.font = `400 14px ${TYPE}`; g.fillText('IN CONNECTION WITH', cx, my+14);
-  g.fillStyle = '#a8261d'; g.font = `900 110px ${DISP}`; g.fillText(String(dead.length), cx, my+118);
-  g.fillStyle = '#6b5a40'; g.font = `400 14px ${TYPE}`; g.fillText(`PROJECT DEATH${dead.length===1?'':'S'} · ${alive.length} STILL BREATHING`, cx, my+142);
+  g.fillStyle = '#a8261d'; g.font = `900 110px ${DISP}`; g.fillText(deadN.toLocaleString(), cx, my+118);
+  g.fillStyle = '#6b5a40'; g.font = `400 14px ${TYPE}`; g.fillText(`PROJECT DEATH${deadN===1?'':'S'} · ${aliveN.toLocaleString()} STILL BREATHING`, cx, my+142);
   g.fillStyle = '#2a2118'; g.font = `400 19px ${TYPE}`;
   mo.slice(0,3).forEach((line, i) => { let t = line; while (g.measureText(t).width > pw-(cx-px)-60 && t.length > 10) t = t.slice(0,-2); if (t !== line) t = t.trimEnd() + '…'; g.fillText(t, cx, my+180+i*30); });
   // stamps that are on the live poster right now
@@ -877,12 +880,15 @@ function render(name){
     X.archived ? `${X.archived} were laid to rest properly (archived). The rest were just left there.` : null,
     X.total > X.listedAll + 5 ? `Only the newest ${X.listedAll} were searched. ${(X.total - X.listedAll).toLocaleString()} more are still in the basement.` : null,
   ].filter(Boolean) : [];
-  const mo0 = dead.length ? profile(dead) : all.length ? [`No bodies found. Suspiciously clean.`, `${all.length} public project${all.length===1?'':'s'}, all still breathing.`, `Most recent sign of life: ${span(NOW - Math.max(...all.map(c=>Date.parse(c.repo.pushed))))} ago.`, `The unit will keep an eye on this one.`] : [`No public projects. No bodies. No fingerprints.`, `Either innocent or very careful.`];
+  // one count everywhere: projects shown as breathing plus the unopened ones still breathing
+  const more = X ? X.breathing.filter(n => !alive.some(c => c.repo.name === n) && !dead.some(c => c.repo.name === n)).length : 0;
+  const breathingN = alive.length + more;
+  const mo0 = dead.length ? profile(dead) : all.length ? [`No bodies found. Suspiciously clean.`, `${all.length} public project${all.length===1?'':'s'}, all still breathing.`, `Most recent sign of life: ${ago(Math.max(...all.map(c=>Date.parse(c.repo.pushed))))}.`, `The unit will keep an eye on this one.`] : [`No public projects. No bodies. No fingerprints.`, `Either innocent or very careful.`];
   const mo = X ? big.concat(mo0.filter(l => !/^Total commits|^First known/.test(l))).slice(0, 6) : mo0;
   out.innerHTML = `<section class="rap poster" aria-label="Wanted poster">
     <div class="wanted">WANTED <span>for questioning</span></div>
     <div class="mug">${s.avatar ? `<img src="${s.avatar}" alt="">` : `<div class="noface">?</div>`}<div class="board">${esc(shown.toUpperCase())}</div></div>
-    <div><div class="k">In connection with</div><div class="count">${bodies.toLocaleString()}</div><div class="k">project death${bodies===1?'':'s'} · ${X ? X.breathing.length : alive.length} still breathing</div>
+    <div><div class="k">In connection with</div><div class="count">${bodies.toLocaleString()}</div><div class="k">project death${bodies===1?'':'s'} · ${breathingN.toLocaleString()} still breathing</div>
     <div class="k" style="margin-top:14px">Known M.O.</div>
     <ul class="priors">${mo.map(p=>`<li>${esc(p)}</li>`).join('')}</ul></div>
     <div class="stamp">${bodies >= 50 ? 'MOST WANTED' : bodies ? (bodies >= 3 ? 'SERIAL OFFENDER' : 'PERSON OF INTEREST') : 'CLEAN RECORD'}</div></section>
@@ -904,13 +910,12 @@ function render(name){
   const mk = document.getElementById('mkcard');
   if (mk) mk.onclick = async () => { mk.disabled = true; mk.textContent = 'DEVELOPING…'; SFX.thud();
     const ex = dead[0] && dead[0].clues[0] ? ['Exhibit A: ' + dead[0].clues[0].text.replace(/<[^>]+>/g,'').replace(/&quot;/g,'"').replace(/&amp;/g,'&')] : [];
-    const url = await shareCard(s, shown, dead, alive, mo.slice(0,2).concat(ex)); mk.disabled = false; mk.textContent = 'THIS IS ME: MAKE MY POSTER'; showCard(url, shown); };
+    const url = await shareCard(s, shown, bodies, breathingN, mo.slice(0,2).concat(ex)); mk.disabled = false; mk.textContent = 'THIS IS ME: MAKE MY POSTER'; showCard(url, shown); };
   const th = thoughts(dead);
   if (bodies >= 100) th.splice(0, th.length, {at: 0, text: `${bodies.toLocaleString()} files. I'm going to need a bigger desk.`}, ...th.filter(t => t.at > 0).slice(0,1));
   if (dead.length) out.appendChild(stack(dead, X && bodies > dead.length ? `THE ${dead.length} MOST NOTABLE OF ${bodies.toLocaleString()}` : 'THE VICTIMS', {thoughts: th, court: () => court(shown, dead, alive, out)}));
   else out.insertAdjacentHTML('beforeend', `<p class="thought">${all.length ? `${all.length} project${all.length===1?'':'s'}, all still breathing. I don't trust it.` : `Nothing here. You can't kill a project you never started.`}</p>`);
-  const more = X ? X.breathing.filter(n => !alive.some(c => c.repo.name === n) && !dead.some(c => c.repo.name === n)).length : 0;
-  if (alive.length) out.insertAdjacentHTML('beforeend', `<p class="alive">Still breathing: ${alive.slice(0,10).map(c=>`<b>${esc(c.repo.name)}</b> (last touched ${span(NOW - Date.parse(c.repo.pushed))} ago)`).join(', ')}${more ? `, and ${more} more` : ''}. For now.</p>`);
+  if (alive.length) out.insertAdjacentHTML('beforeend', `<p class="alive">Still breathing: ${alive.slice(0,10).map(c=>`<b>${esc(c.repo.name)}</b> (last touched ${ago(Date.parse(c.repo.pushed))})`).join(', ')}${more ? `, and ${more} more` : ''}. For now.</p>`);
 }
 document.getElementById('intake').addEventListener('submit', e => { e.preventDefault(); openSuspect(document.getElementById('who').value.trim().replace(/^@/,'')); });
 document.querySelectorAll('[data-open]').forEach(b => b.addEventListener('click', () => openSuspect(b.dataset.open)));
