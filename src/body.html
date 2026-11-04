@@ -75,7 +75,7 @@ function analyze(repo, owner){
   // the same message, repeated
   const groups = {}; cs.forEach(c => { if(!/^(merge|update readme|add files via upload)/i.test(c.msg) && !FIRST.test(c.msg.trim())) (groups[c.msg]=groups[c.msg]||[]).push(c); });
   const rep = Object.values(groups).sort((a,b)=>b.length-a.length)[0];
-  if (rep && rep.length >= 2) {
+  if (rep && rep.length >= 3) {
     const gap = rep[rep.length-1].t - rep[0].t;
     add(`It said ${q(rep[0].msg)} ${rep.length} times${gap < 2*H ? ' in ' + span(gap) : ''}.`, 6 + rep.length);
   }
@@ -98,7 +98,7 @@ function analyze(repo, owner){
   // nobody came
   if (repo.has_contributing && repo.authors.length === 1) add(`It had a contributing guide. It never had a contributor.`, 7);
   // the big keyword library
-  for (const c of runLib(repo, cs, {n, life, quiet, born, died})) add(c.text, c.score);
+  for (const c of runLib(repo, cs, {n, total: Math.max(n, repo.total||0), life, quiet, born, died})) add(c.text, c.score);
   // stars
   if (repo.stars === 0) add(`0 stars. Not even from its creator.`, 3);
   else if (repo.stars === 1) add(`One star. Suspicious.`, 3);
@@ -144,7 +144,7 @@ __SHARE__
 __LIVEJS__
 function folder(c, i, total){
   const title = c.repo.hidden_owner ? c.repo.label : c.repo.name;
-  const wt = c.wit || witness(c);
+  const wt = c.wit === undefined ? witness(c) : c.wit; // null: every witness line was already used on this page
   return `<article class="folder"><div class="k">Case ${i+1} of ${total}${c.repo.hidden_owner ? ' · owner withheld' : ''}</div>
   <h3>${esc(title)}</h3>
   <div class="meta"><div><div class="k">Born</div><div class="v">${esc(clock(c.born.date).day)}</div></div>
@@ -153,7 +153,7 @@ function folder(c, i, total){
   <ol class="clues">${c.clues.map((x,j)=>`<li data-n="${j+1}">${x.text}</li>`).join('')}</ol>
   ${wt ? `<div class="witness"><span class="k">Witness statement</span><br><b>${esc(wt.who)}:</b> ${esc(wt.text)}</div>` : ''}
   <div class="last"><span class="k">Last words</span><br>${q(c.died.msg)}</div>
-  <div class="funeral">${esc(c.fun || funeral(c))}</div>
+  ${c.fun === null ? '' : `<div class="funeral">${esc(c.fun || funeral(c))}</div>`}
   <div class="ruling">${esc(c.ruling)}</div></article>`;
 }
 
@@ -359,11 +359,13 @@ function render(name){
     } catch(e) { lf.disabled = false; lf.textContent = 'SHOW WHO'; document.getElementById('notice').textContent = e instanceof Busy ? `GitHub's hourly limit is used up. It reopens around ${e.message}.` : `Couldn't reach GitHub.`; } };
   const mk = document.getElementById('mkcard');
   if (mk) mk.onclick = async () => { mk.disabled = true; mk.textContent = 'DEVELOPING…'; SFX.thud();
-    const ex = dead[0] && dead[0].clues[0] ? ['Exhibit A: ' + dead[0].clues[0].text.replace(/<[^>]+>/g,'').replace(/&quot;/g,'"').replace(/&amp;/g,'&')] : [];
+    const ex = files[0] && files[0].clues[0] ? ['Exhibit A: ' + files[0].clues[0].text.replace(/<[^>]+>/g,'').replace(/&quot;/g,'"').replace(/&amp;/g,'&')] : [];
     const url = await shareCard(s, shown, bodies, breathingN, mo.slice(0,2).concat(ex)); mk.disabled = false; mk.textContent = 'THIS IS ME: MAKE MY POSTER'; showCard(url, shown); };
-  const th = thoughts(dead);
+  // big profiles: skip a file that would only repeat jokes already on the page (there are plenty more bodies)
+  let files = dead; if (X) { vary(dead); files = dead.filter(c => !c.stale); if (!files.length) files = dead; }
+  const th = thoughts(files);
   if (bodies >= 100) th.splice(0, th.length, {at: 0, text: `${bodies.toLocaleString()} files. I'm going to need a bigger desk.`}, ...th.filter(t => t.at > 0).slice(0,1));
-  if (dead.length) out.appendChild(stack(dead, X && bodies > dead.length ? `THE ${dead.length} MOST NOTABLE OF ${bodies.toLocaleString()}` : 'THE VICTIMS', {thoughts: th, court: () => court(shown, dead, alive, out)}));
+  if (files.length) out.appendChild(stack(files, X && bodies > files.length ? `THE ${files.length} MOST NOTABLE OF ${bodies.toLocaleString()}` : 'THE VICTIMS', {thoughts: th, court: () => court(shown, dead, alive, out)}));
   else out.insertAdjacentHTML('beforeend', `<p class="thought">${all.length ? `${all.length} project${all.length===1?'':'s'}, all still breathing. I don't trust it.` : `Nothing here. You can't kill a project you never started.`}</p>`);
   if (alive.length) out.insertAdjacentHTML('beforeend', `<p class="alive">Still breathing: ${alive.slice(0,10).map(c=>`<b>${esc(c.repo.name)}</b> (last touched ${ago(Date.parse(c.repo.pushed))})`).join(', ')}${more ? `, and ${more} more` : ''}. For now.</p>`);
 }
