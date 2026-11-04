@@ -362,9 +362,9 @@ function render(name){
       document.querySelectorAll('#follows [data-open]').forEach(b => b.onclick = () => { document.getElementById('who').value = b.dataset.open; scrollTo({top:0, behavior:'smooth'}); openSuspect(b.dataset.open); });
     } catch(e) { lf.disabled = false; lf.textContent = 'SHOW WHO'; document.getElementById('notice').textContent = e instanceof Busy ? `GitHub's hourly limit is used up. It reopens around ${e.message}.` : `Couldn't reach GitHub.`; } };
   const mk = document.getElementById('mkcard');
-  if (mk) mk.onclick = async () => { mk.disabled = true; mk.textContent = 'DEVELOPING…'; SFX.thud();
+  if (mk) mk.onclick = async () => { const label = mk.textContent; mk.disabled = true; mk.textContent = 'DEVELOPING…'; SFX.thud();
     const ex = files[0] && files[0].clues[0] ? ['Exhibit A: ' + files[0].clues[0].text.replace(/<[^>]+>/g,'').replace(/&quot;/g,'"').replace(/&amp;/g,'&')] : [];
-    const url = await shareCard(s, shown, bodies, breathingN, mo.slice(0,2).concat(ex)); mk.disabled = false; mk.textContent = 'THIS IS ME: MAKE MY POSTER'; showCard(url, shown); };
+    const url = await shareCard(s, shown, bodies, breathingN, mo.slice(0,2).concat(ex)); mk.disabled = false; mk.textContent = label; showCard(url, shown, bodies); };
   // big profiles: skip a file that would only repeat jokes already on the page (there are plenty more bodies)
   let files = dead; if (X) { vary(dead); files = dead.filter(c => !c.stale); if (!files.length) files = dead; }
   const th = thoughts(files);
