@@ -78,9 +78,16 @@ async function loadRepo(owner, m){
       ds_store: base.filter(b => b === '.ds_store').length, tests: low.filter(f => /(^|\/)(tests?|__tests__|spec)\/|(_test|\.test|\.spec|test_)\w*\./.test(f)).length,
       deps, todos, biggest, empty_files: tree.filter(x => x.size === 0).map(x => x.path).slice(0,3), untitled: []}};
 }
-async function loadSuspect(user, progress){
-  const key = 'ccu-file-' + user.toLowerCase();
-  try { const c = JSON.parse(localStorage.getItem(key) || 'null'); if (c && Date.now() - c.at < 6*H) return c.data; } catch(e) {}
+// Saved lookups: the saved copy is raw GitHub facts, not the jokes, so wording fixes show at once.
+// LOADER_VER changes whenever this loader changes (set by build.py), which retires every older copy.
+// Signed out, a copy lasts an hour (GitHub allows 60 lookups an hour); signed in, 10 minutes.
+const LOADER_VER = '__LOADER_VER__';
+try { for (let i = localStorage.length - 1; i >= 0; i--) { const k = localStorage.key(i); if (/^ccu-file-/.test(k) && !k.startsWith('ccu-file-' + LOADER_VER + '-')) localStorage.removeItem(k); } } catch(e) {}
+function cacheKey(user){ return 'ccu-file-' + LOADER_VER + '-' + user.toLowerCase(); }
+function forget(user){ try { localStorage.removeItem(cacheKey(user)); } catch(e) {} }
+async function loadSuspect(user, progress, fresh){
+  const key = cacheKey(user);
+  if (!fresh) try { const c = JSON.parse(localStorage.getItem(key) || 'null'); if (c && Date.now() - c.at < (TOKEN ? 10*60e3 : H)) return c.data; } catch(e) {}
   const u = await gh(`/users/${encodeURIComponent(user)}`); if (!u) return null;
   // read every project's basic record (100 per call, up to 300), then open full files on at most 10
   let listed = [];
@@ -114,7 +121,7 @@ async function loadSuspect(user, progress){
         res.json.forEach(x => { const c = {date: x.commit.committer.date, author: x.commit.author.name, msg: (x.commit.message||'').split('\n')[0]}; if (!seen.has(c.date+c.msg)) busy.commits.push(c); }); }
     }
   }
-  const data = {user: u.json.login, avatar: u.json.avatar_url, repos, extra, live: true};
+  const data = {user: u.json.login, avatar: u.json.avatar_url, repos, extra, live: true, at: Date.now()};
   try { localStorage.setItem(key, JSON.stringify({at: Date.now(), data})); } catch(e) {}
   return data;
 }

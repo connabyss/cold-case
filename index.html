@@ -121,6 +121,7 @@ body.shake .wrap{animation:shake .35s}
 .bigstamp{position:absolute;left:50%;top:46%;transform:translate(-50%,-50%) rotate(-12deg);border:8px solid var(--stamp);color:var(--stamp);font:900 clamp(60px,12vw,130px)/1 var(--display);padding:8px 26px;letter-spacing:.08em;mix-blend-mode:multiply;pointer-events:none;animation:bigslam .4s ease-in both}
 @keyframes bigslam{0%{transform:translate(-50%,-50%) scale(3) rotate(-20deg);opacity:0}70%{transform:translate(-50%,-50%) scale(.95) rotate(-12deg);opacity:.95}100%{transform:translate(-50%,-50%) rotate(-12deg);opacity:.9}}
 .folder{cursor:default}
+.reopen{margin:10px 0 0;display:flex;gap:12px;align-items:center;flex-wrap:wrap}.reopen button{font-size:12px;padding:6px 10px}
 </style>
 <div class="tape" aria-hidden="true">CRIME SCENE · DO NOT CROSS · CRIME SCENE · DO NOT CROSS · CRIME SCENE · DO NOT CROSS · CRIME SCENE · DO NOT CROSS · CRIME SCENE · DO NOT CROSS</div>
 <div class="wrap">
@@ -661,9 +662,16 @@ async function loadRepo(owner, m){
       ds_store: base.filter(b => b === '.ds_store').length, tests: low.filter(f => /(^|\/)(tests?|__tests__|spec)\/|(_test|\.test|\.spec|test_)\w*\./.test(f)).length,
       deps, todos, biggest, empty_files: tree.filter(x => x.size === 0).map(x => x.path).slice(0,3), untitled: []}};
 }
-async function loadSuspect(user, progress){
-  const key = 'ccu-file-' + user.toLowerCase();
-  try { const c = JSON.parse(localStorage.getItem(key) || 'null'); if (c && Date.now() - c.at < 6*H) return c.data; } catch(e) {}
+// Saved lookups: the saved copy is raw GitHub facts, not the jokes, so wording fixes show at once.
+// LOADER_VER changes whenever this loader changes (set by build.py), which retires every older copy.
+// Signed out, a copy lasts an hour (GitHub allows 60 lookups an hour); signed in, 10 minutes.
+const LOADER_VER = '365df352';
+try { for (let i = localStorage.length - 1; i >= 0; i--) { const k = localStorage.key(i); if (/^ccu-file-/.test(k) && !k.startsWith('ccu-file-' + LOADER_VER + '-')) localStorage.removeItem(k); } } catch(e) {}
+function cacheKey(user){ return 'ccu-file-' + LOADER_VER + '-' + user.toLowerCase(); }
+function forget(user){ try { localStorage.removeItem(cacheKey(user)); } catch(e) {} }
+async function loadSuspect(user, progress, fresh){
+  const key = cacheKey(user);
+  if (!fresh) try { const c = JSON.parse(localStorage.getItem(key) || 'null'); if (c && Date.now() - c.at < (TOKEN ? 10*60e3 : H)) return c.data; } catch(e) {}
   const u = await gh(`/users/${encodeURIComponent(user)}`); if (!u) return null;
   // read every project's basic record (100 per call, up to 300), then open full files on at most 10
   let listed = [];
@@ -697,7 +705,7 @@ async function loadSuspect(user, progress){
         res.json.forEach(x => { const c = {date: x.commit.committer.date, author: x.commit.author.name, msg: (x.commit.message||'').split('\n')[0]}; if (!seen.has(c.date+c.msg)) busy.commits.push(c); }); }
     }
   }
-  const data = {user: u.json.login, avatar: u.json.avatar_url, repos, extra, live: true};
+  const data = {user: u.json.login, avatar: u.json.avatar_url, repos, extra, live: true, at: Date.now()};
   try { localStorage.setItem(key, JSON.stringify({at: Date.now(), data})); } catch(e) {}
   return data;
 }
@@ -849,14 +857,15 @@ async function compare(a, b){
   box.scrollIntoView({behavior: calm ? 'auto' : 'smooth', block:'start'});
 }
 let loading = false;
-async function openSuspect(name){
+async function openSuspect(name, fresh){
   if (!name) return;
+  if (fresh && LIVE) { delete DATA.suspects[name.toLowerCase()]; forget(name); }
   if (LIVE && !name.startsWith('#') && !DATA.suspects[name.toLowerCase()]) {
     if (loading) return; loading = true;
     const note = document.getElementById('notice');
     note.textContent = `Pulling the file on ${name}…`;
     try {
-      const data = await loadSuspect(name, (i, n, r) => { note.textContent = `Pulling the file on ${name}: project ${i+1} of ${n}, ${r}…`; });
+      const data = await loadSuspect(name, (i, n, r) => { note.textContent = `Pulling the file on ${name}: project ${i+1} of ${n}, ${r}…`; }, fresh);
       if (!data) { note.textContent = `No GitHub user called “${name}”. Check the spelling.`; return; }
       DATA.suspects[name.toLowerCase()] = data;
     } catch (e) {
@@ -904,7 +913,10 @@ function render(name){
     <div class="stamp">${bodies >= 50 ? 'MOST WANTED' : bodies ? (bodies >= 3 ? 'SERIAL OFFENDER' : 'PERSON OF INTEREST') : 'CLEAN RECORD'}</div></section>
     ${s.hidden_owner ? '' : !(LIVE && AUTH_URL) ? `<div class="sharerow"><button id="mkcard">THIS IS ME: MAKE MY POSTER</button><span>Only make your own. Stamps from the court are included.</span></div>`
       : ME && ME.toLowerCase() === (s.user || '').toLowerCase() ? `<div class="sharerow"><button id="mkcard">MAKE MY WANTED POSTER</button><span>Signed in as ${esc(ME)}. Stamps from the court are included.</span></div>`
-      : !ME ? `<div class="sharerow"><button class="ghost" id="signin2">IS THIS YOU? SIGN IN TO MAKE THE POSTER</button></div>` : ''}`;
+      : !ME ? `<div class="sharerow"><button class="ghost" id="signin2">IS THIS YOU? SIGN IN TO MAKE THE POSTER</button></div>` : ''}
+    ${LIVE && s.at ? `<p class="reopen k">File pulled ${ago(s.at)}. <button class="ghost" type="button" id="reopen">REOPEN THE CASE</button></p>` : ''}`;
+  const ro = document.getElementById('reopen');
+  if (ro) ro.onclick = () => { ro.disabled = true; ro.textContent = 'PULLING A FRESH FILE…'; openSuspect(s.user || name, true); };
   const si2 = document.getElementById('signin2'); if (si2) si2.onclick = signIn;
   out.insertAdjacentHTML('beforeend', `<div class="social">
     <form id="cmpform"><label class="k" for="cmpwho">Compare rap sheets with</label><div class="row"><input id="cmpwho" placeholder="a friend's username" autocomplete="off" spellcheck="false"><button class="ghost" type="submit">COMPARE</button></div></form>

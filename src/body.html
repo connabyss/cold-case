@@ -289,14 +289,15 @@ async function compare(a, b){
   box.scrollIntoView({behavior: calm ? 'auto' : 'smooth', block:'start'});
 }
 let loading = false;
-async function openSuspect(name){
+async function openSuspect(name, fresh){
   if (!name) return;
+  if (fresh && LIVE) { delete DATA.suspects[name.toLowerCase()]; forget(name); }
   if (LIVE && !name.startsWith('#') && !DATA.suspects[name.toLowerCase()]) {
     if (loading) return; loading = true;
     const note = document.getElementById('notice');
     note.textContent = `Pulling the file on ${name}…`;
     try {
-      const data = await loadSuspect(name, (i, n, r) => { note.textContent = `Pulling the file on ${name}: project ${i+1} of ${n}, ${r}…`; });
+      const data = await loadSuspect(name, (i, n, r) => { note.textContent = `Pulling the file on ${name}: project ${i+1} of ${n}, ${r}…`; }, fresh);
       if (!data) { note.textContent = `No GitHub user called “${name}”. Check the spelling.`; return; }
       DATA.suspects[name.toLowerCase()] = data;
     } catch (e) {
@@ -344,7 +345,10 @@ function render(name){
     <div class="stamp">${bodies >= 50 ? 'MOST WANTED' : bodies ? (bodies >= 3 ? 'SERIAL OFFENDER' : 'PERSON OF INTEREST') : 'CLEAN RECORD'}</div></section>
     ${s.hidden_owner ? '' : !(LIVE && AUTH_URL) ? `<div class="sharerow"><button id="mkcard">THIS IS ME: MAKE MY POSTER</button><span>Only make your own. Stamps from the court are included.</span></div>`
       : ME && ME.toLowerCase() === (s.user || '').toLowerCase() ? `<div class="sharerow"><button id="mkcard">MAKE MY WANTED POSTER</button><span>Signed in as ${esc(ME)}. Stamps from the court are included.</span></div>`
-      : !ME ? `<div class="sharerow"><button class="ghost" id="signin2">IS THIS YOU? SIGN IN TO MAKE THE POSTER</button></div>` : ''}`;
+      : !ME ? `<div class="sharerow"><button class="ghost" id="signin2">IS THIS YOU? SIGN IN TO MAKE THE POSTER</button></div>` : ''}
+    ${LIVE && s.at ? `<p class="reopen k">File pulled ${ago(s.at)}. <button class="ghost" type="button" id="reopen">REOPEN THE CASE</button></p>` : ''}`;
+  const ro = document.getElementById('reopen');
+  if (ro) ro.onclick = () => { ro.disabled = true; ro.textContent = 'PULLING A FRESH FILE…'; openSuspect(s.user || name, true); };
   const si2 = document.getElementById('signin2'); if (si2) si2.onclick = signIn;
   out.insertAdjacentHTML('beforeend', `<div class="social">
     <form id="cmpform"><label class="k" for="cmpwho">Compare rap sheets with</label><div class="row"><input id="cmpwho" placeholder="a friend's username" autocomplete="off" spellcheck="false"><button class="ghost" type="submit">COMPARE</button></div></form>
