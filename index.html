@@ -308,8 +308,8 @@ function analyze(repo, owner){
   else if (n <= 6 && life > 60*D && !(n>=2 && died.t - cs[n-2].t > 90*D)) add(`${n} commits in ${span(life)}. A pulse every ${span(life/(n-1))}.`, 4);
   // "first commit", again and again
   const firsts = cs.filter(c => FIRST.test(c.msg.trim())).length;
-  if (firsts >= 2 && firsts === n) add(`All ${n} of its commits are called “first commit.” It never made a second.`, 11);
-  else if (firsts >= 2 && firsts/n >= .5) add(`${firsts} of its ${n} commits are called “first commit.” It never made a second.`, 11);
+  if (firsts >= 2 && firsts === n) add(`${n === 2 ? 'Both' : 'All ' + n} of its commits are called “first commit.” It never made a second.`, 11);
+  else if (firsts >= 2 && firsts/n >= .5) add(`${firsts} of its ${n} commits are called “first commit.” It kept starting over.`, 11);
   else if (firsts >= 2) add(`It had ${firsts} different “first commits.” It kept starting over.`, 6);
   // the same message, repeated
   const groups = {}; cs.forEach(c => { if(!/^(merge|update readme|add files via upload)/i.test(c.msg) && !FIRST.test(c.msg.trim())) (groups[c.msg]=groups[c.msg]||[]).push(c); });
@@ -365,10 +365,16 @@ function analyze(repo, owner){
     add(`The detective has seen this one before. It's this website.`, 99);
     ruling = `Ruled: the unit investigated itself and found itself guilty.`;
   }
-  if (!ruling) ruling = life < D ? `Ruled: “I'll finish it tomorrow.”` : /readme/i.test(died.msg) ? `Ruled: death by documentation.` : fixes/n >= .5 ? `Ruled: complications from too many fixes.` : `Ruled: natural causes. Nobody came back.`;
+  // several wordings per cause, so a page of short-lived projects doesn't repeat one ruling (vary() picks)
+  let rulings = null;
+  if (!ruling) rulings = life < D ? [`Ruled: “I'll finish it tomorrow.”`, `Ruled: tomorrow never came.`, `Ruled: walked away while it was still warm.`, `Ruled: a one-day stand.`]
+    : /readme/i.test(died.msg) ? [`Ruled: death by documentation.`, `Ruled: documented to death.`]
+    : fixes/n >= .5 ? [`Ruled: complications from too many fixes.`, `Ruled: fixed until it stopped moving.`]
+    : [`Ruled: natural causes. Nobody came back.`, `Ruled: natural causes. The owner moved on.`, `Ruled: natural causes. Left out in the rain.`];
+  if (!ruling) ruling = rulings[0];
   clues.sort((a,b)=>b.score-a.score);
   if (repo.breathing) return {repo, born, died, life, quiet, all: [], clues: [], ruling: '', dead: false};
-  return {repo, born, died, life, quiet, all: clues, clues: clues.slice(0,5), ruling, dead: quiet > 30*D || (quiet > 3*D && life < 2*D)};
+  return {repo, born, died, life, quiet, all: clues, clues: clues.slice(0,5), ruling, rulings, dead: quiet > 30*D || (quiet > 3*D && life < 2*D)};
 }
 
 // ===== Witnesses, funerals, the profile, the detective, the court =====
@@ -407,8 +413,12 @@ function funeral(c){ const v = funerals(c); return v[hash(c.repo.name + 'fun') %
 // Page-level variety: the same joke twice in a row stops being a joke.
 const ckey = t => t.replace(/<[^>]+>/g,'').replace(/“[^”]*”/g,'Q').replace(/\d[\d:,.]*\s?(AM|PM)?/g,'#').slice(0,22);
 function vary(cases){
-  const seen = {}, wseen = {}, fseen = {};
+  const seen = {}, wseen = {}, fseen = {}, rseen = {}; let prevRuling = '';
   for (const c of cases) {
+    if (c.rulings) { // least-used wording, never the same as the case before
+      const opts = c.rulings.filter(r => r !== prevRuling);
+      c.ruling = opts.slice().sort((a,b) => (rseen[a]||0) - (rseen[b]||0))[0] || c.ruling; rseen[c.ruling] = (rseen[c.ruling]||0) + 1; }
+    prevRuling = c.ruling;
     if (c.all) {
       let pool = c.all.map(x => ({...x, adj: x.score - 5*(seen[ckey(x.text)]||0)}));
       const fresh = pool.filter(x => (seen[ckey(x.text)]||0) < 2); if (fresh.length >= 2) pool = fresh;
@@ -669,7 +679,7 @@ async function loadSuspect(user, progress){
     const shortest = deadish.slice().sort((a,b) => lifeOf(a) - lifeOf(b)).slice(0, 6);
     const starred = deadish.filter(m => !shortest.includes(m)).sort((a,b) => b.stargazers_count - a.stargazers_count).slice(0, 10 - shortest.length);
     metas = [...breathing, ...shortest, ...starred];
-    const yearDead = own.filter(m => quietFor(m) > 365*D);
+    const yearDead = own.filter(m => quietFor(m) > 365*D || m.archived); // archived counts as dead, however recent
     const oldest = yearDead.slice().sort((a,b) => quietFor(b) - quietFor(a))[0];
     extra = {total: u.json.public_repos, listedAll: listed.length, listed: own.length, dead: yearDead.length, archived: own.filter(m => m.archived).length,
       stars: yearDead.reduce((t,m) => t + m.stargazers_count, 0), forks: yearDead.reduce((t,m) => t + m.forks_count, 0),
@@ -872,17 +882,18 @@ function render(name){
   const all = s.repos.map(r => analyze(r, s));
   const dead = all.filter(c => c.dead), alive = all.filter(c => !c.dead);
   const X = s.extra, bodies = X ? Math.max(dead.length, X.dead) : dead.length;
+  // one count everywhere: projects shown as breathing plus the unopened ones still breathing
+  const more = X ? X.breathing.filter(n => !alive.some(c => c.repo.name === n) && !dead.some(c => c.repo.name === n)).length : 0;
+  const breathingN = alive.length + more;
+  const skipped = X ? X.listedAll - bodies - breathingN : 0;
   const big = X ? [
     bodies >= 100 ? `Body count: ${bodies.toLocaleString()}. The morgue is full.` : bodies >= 30 ? `Body count: ${bodies}. The morgue is asking questions.` : `Body count: ${bodies}, untouched for over a year.`,
     X.stars >= 50 ? `The dead hold ${X.stars.toLocaleString()} stars between them. Nobody visits.` : null,
     X.forks >= 20 ? `${X.forks.toLocaleString()} forks were taken from the dead. Organ donors.` : null,
     X.oldest ? `Oldest cold case: ${X.oldest.name}, untouched for ${span(X.oldest.quiet)}.` : null,
-    X.archived ? `${X.archived} were laid to rest properly (archived). The rest were just left there.` : null,
-    X.total > X.listedAll + 5 ? `Only the newest ${X.listedAll} were searched. ${(X.total - X.listedAll).toLocaleString()} more are still in the basement.` : null,
+    X.archived ? `${X.archived === 1 ? 'One was' : X.archived + ' were'} laid to rest properly (archived). The rest were just left there.` : null,
+    X.total > X.listedAll + 5 ? `Only the newest ${X.listedAll} were searched${skipped > 0 ? ` (${skipped} of them forks or empty, not counted)` : ''}. ${X.total - X.listedAll === 1 ? 'One more is' : (X.total - X.listedAll).toLocaleString() + ' more are'} still in the basement.` : null,
   ].filter(Boolean) : [];
-  // one count everywhere: projects shown as breathing plus the unopened ones still breathing
-  const more = X ? X.breathing.filter(n => !alive.some(c => c.repo.name === n) && !dead.some(c => c.repo.name === n)).length : 0;
-  const breathingN = alive.length + more;
   const mo0 = dead.length ? profile(dead) : all.length ? [`No bodies found. Suspiciously clean.`, `${all.length} public project${all.length===1?'':'s'}, all still breathing.`, `Most recent sign of life: ${ago(Math.max(...all.map(c=>Date.parse(c.repo.pushed))))}.`, `The unit will keep an eye on this one.`] : [`No public projects. No bodies. No fingerprints.`, `Either innocent or very careful.`];
   const mo = X ? big.concat(mo0.filter(l => !/^Total commits|^First known/.test(l))).slice(0, 6) : mo0;
   out.innerHTML = `<section class="rap poster" aria-label="Wanted poster">

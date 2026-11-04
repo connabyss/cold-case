@@ -34,8 +34,12 @@ function funeral(c){ const v = funerals(c); return v[hash(c.repo.name + 'fun') %
 // Page-level variety: the same joke twice in a row stops being a joke.
 const ckey = t => t.replace(/<[^>]+>/g,'').replace(/“[^”]*”/g,'Q').replace(/\d[\d:,.]*\s?(AM|PM)?/g,'#').slice(0,22);
 function vary(cases){
-  const seen = {}, wseen = {}, fseen = {};
+  const seen = {}, wseen = {}, fseen = {}, rseen = {}; let prevRuling = '';
   for (const c of cases) {
+    if (c.rulings) { // least-used wording, never the same as the case before
+      const opts = c.rulings.filter(r => r !== prevRuling);
+      c.ruling = opts.slice().sort((a,b) => (rseen[a]||0) - (rseen[b]||0))[0] || c.ruling; rseen[c.ruling] = (rseen[c.ruling]||0) + 1; }
+    prevRuling = c.ruling;
     if (c.all) {
       let pool = c.all.map(x => ({...x, adj: x.score - 5*(seen[ckey(x.text)]||0)}));
       const fresh = pool.filter(x => (seen[ckey(x.text)]||0) < 2); if (fresh.length >= 2) pool = fresh;

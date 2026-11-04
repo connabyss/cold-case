@@ -95,7 +95,7 @@ async function loadSuspect(user, progress){
     const shortest = deadish.slice().sort((a,b) => lifeOf(a) - lifeOf(b)).slice(0, 6);
     const starred = deadish.filter(m => !shortest.includes(m)).sort((a,b) => b.stargazers_count - a.stargazers_count).slice(0, 10 - shortest.length);
     metas = [...breathing, ...shortest, ...starred];
-    const yearDead = own.filter(m => quietFor(m) > 365*D);
+    const yearDead = own.filter(m => quietFor(m) > 365*D || m.archived); // archived counts as dead, however recent
     const oldest = yearDead.slice().sort((a,b) => quietFor(b) - quietFor(a))[0];
     extra = {total: u.json.public_repos, listedAll: listed.length, listed: own.length, dead: yearDead.length, archived: own.filter(m => m.archived).length,
       stars: yearDead.reduce((t,m) => t + m.stargazers_count, 0), forks: yearDead.reduce((t,m) => t + m.forks_count, 0),
