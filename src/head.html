@@ -97,7 +97,10 @@ body.reopen::after{content:"CASE REOPENED · CASE REOPENED · CASE REOPENED · C
 .cardinner img{width:100%;height:auto;box-shadow:0 20px 60px rgba(0,0,0,.7)}
 .cardrow{display:flex;gap:14px;align-items:center;flex-wrap:wrap;color:var(--dim);font-size:14px}
 .btnlink{background:var(--tape);color:#111;font:900 18px var(--display);letter-spacing:.12em;padding:12px 22px;text-decoration:none;border-radius:2px}
-.snd{position:absolute;top:58px;right:max(16px,env(safe-area-inset-right,0px));font-size:13px;padding:6px 12px}
+.topbar{position:absolute;top:58px;right:max(16px,env(safe-area-inset-right,0px));display:flex;gap:8px;align-items:center;color:var(--dim);font-size:13px}
+.topbar button{font-size:13px;padding:6px 12px}
+.topbar b{color:var(--chalk)}
+@media (max-width:560px){.topbar{position:static;justify-content:flex-end;margin-top:10px}}
 .bigstamp.s2{left:80%;top:22%;font-size:clamp(28px,5vw,52px);border-width:5px;transform:translate(-50%,-50%) rotate(9deg);animation-name:slam2}
 .bigstamp.s3{left:30%;top:80%;font-size:clamp(28px,5vw,52px);border-width:5px;transform:translate(-50%,-50%) rotate(-4deg);animation-name:slam3}
 @keyframes slam2{0%{transform:translate(-50%,-50%) scale(3) rotate(20deg);opacity:0}70%{transform:translate(-50%,-50%) scale(.95) rotate(9deg)}100%{transform:translate(-50%,-50%) rotate(9deg);opacity:.9}}

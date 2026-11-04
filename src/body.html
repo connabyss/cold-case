@@ -14,7 +14,7 @@
     <button class="ghost" type="button" data-open="#suspect">a repeat offender, name withheld</button>
     <button class="ghost" type="button" data-open="#strangers">10 strangers, names withheld</button>
   </div><!--/ONFILE-->
-  <button class="ghost snd" type="button" id="snd" aria-pressed="true">♪ Sound on</button>
+  <div class="topbar"><span id="who-am-i"></span><button class="ghost" type="button" id="snd" aria-pressed="true">♪ Sound on</button></div>
   <div class="notice" id="notice" role="status"></div>
 </header>
 <main id="out"><!--INTRO--><!--/INTRO--></main>
@@ -292,7 +292,7 @@ async function openSuspect(name){
       if (!data) { note.textContent = `No GitHub user called “${name}”. Check the spelling.`; return; }
       DATA.suspects[name.toLowerCase()] = data;
     } catch (e) {
-      note.textContent = e instanceof Busy ? `The records room is closed: GitHub lets each visitor make 60 lookups an hour, and this one is used up. It reopens around ${e.message}.` : `Couldn't reach GitHub just now. Try again in a minute.`;
+      note.textContent = e instanceof Busy ? (TOKEN ? `The records room is closed for now. It reopens around ${e.message}.` : `The records room is closed: GitHub lets each visitor make 60 lookups an hour, and this one is used up. It reopens around ${e.message}.${AUTH_URL ? ' Or sign in with GitHub for 5,000 an hour.' : ''}`) : `Couldn't reach GitHub just now. Try again in a minute.`;
       return;
     } finally { loading = false; }
     try { history.replaceState(null, '', '?u=' + encodeURIComponent(name)); } catch(e) {}
@@ -330,7 +330,10 @@ function render(name){
     <div class="k" style="margin-top:14px">Known M.O.</div>
     <ul class="priors">${mo.map(p=>`<li>${esc(p)}</li>`).join('')}</ul></div>
     <div class="stamp">${bodies >= 50 ? 'MOST WANTED' : bodies ? (bodies >= 3 ? 'SERIAL OFFENDER' : 'PERSON OF INTEREST') : 'CLEAN RECORD'}</div></section>
-    ${s.hidden_owner ? '' : `<div class="sharerow"><button id="mkcard">THIS IS ME: MAKE MY POSTER</button><span>Only make your own. Stamps from the court are included.</span></div>`}`;
+    ${s.hidden_owner ? '' : !(LIVE && AUTH_URL) ? `<div class="sharerow"><button id="mkcard">THIS IS ME: MAKE MY POSTER</button><span>Only make your own. Stamps from the court are included.</span></div>`
+      : ME && ME.toLowerCase() === (s.user || '').toLowerCase() ? `<div class="sharerow"><button id="mkcard">MAKE MY WANTED POSTER</button><span>Signed in as ${esc(ME)}. Stamps from the court are included.</span></div>`
+      : !ME ? `<div class="sharerow"><button class="ghost" id="signin2">IS THIS YOU? SIGN IN TO MAKE THE POSTER</button></div>` : ''}`;
+  const si2 = document.getElementById('signin2'); if (si2) si2.onclick = signIn;
   out.insertAdjacentHTML('beforeend', `<div class="social">
     <form id="cmpform"><label class="k" for="cmpwho">Compare rap sheets with</label><div class="row"><input id="cmpwho" placeholder="a friend's username" autocomplete="off" spellcheck="false"><button class="ghost" type="submit">COMPARE</button></div></form>
     ${LIVE && !s.hidden_owner ? `<div><span class="k">Or open a case on someone ${esc(shown)} follows</span><div class="row" id="follows"><button class="ghost" type="button" id="loadfollows">SHOW WHO</button></div></div>` : ''}
@@ -356,6 +359,14 @@ function render(name){
 document.getElementById('intake').addEventListener('submit', e => { e.preventDefault(); openSuspect(document.getElementById('who').value.trim().replace(/^@/,'')); });
 document.querySelectorAll('[data-open]').forEach(b => b.addEventListener('click', () => openSuspect(b.dataset.open)));
 { const u = new URLSearchParams(location.search).get('u'); if (u) { document.getElementById('who').value = u; openSuspect(u); } else if (!LIVE) openSuspect('connabyss'); }
+function drawMe(){
+  const el = document.getElementById('who-am-i'); if (!el || !LIVE || !AUTH_URL) return;
+  el.innerHTML = ME ? `Signed in as <b>${esc(ME)}</b> <button class="ghost" type="button" id="signout">Sign out</button>` : `<button class="ghost" type="button" id="signin">Sign in with GitHub</button>`;
+  const a = document.getElementById('signin'), b = document.getElementById('signout');
+  if (a) a.onclick = signIn;
+  if (b) b.onclick = () => { signOut(); drawMe(); const u = new URLSearchParams(location.search).get('u'); if (u) render(u); };
+}
+if (LIVE && TOKEN) whoAmI().then(() => { drawMe(); const u = new URLSearchParams(location.search).get('u'); if (u && DATA.suspects[u.toLowerCase()]) render(u); }); else drawMe();
 const sndBtn = document.getElementById('snd');
 const sndDraw = () => { sndBtn.textContent = SFX.on ? '♪ Sound on' : '♪ Sound off'; sndBtn.setAttribute('aria-pressed', SFX.on); };
 sndBtn.onclick = () => { SFX.setOn(!SFX.on); sndDraw(); }; sndDraw();

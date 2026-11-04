@@ -5,8 +5,26 @@ const GH = 'https://api.github.com';
 const TEXT_EXT = /\.(py|js|ts|tsx|jsx|go|rs|java|kt|c|h|cpp|cs|rb|php|swift|gd|lua|sh|html|css|vue|svelte|dart|scala|m|r|jl|txt|json|ya?ml|toml|ipynb|sql)$/i;
 const CODE_EXT = /\.(py|js|ts|tsx|jsx|go|rs|java|kt|c|cpp|cs|rb|php|gd|lua|dart|vue|svelte|swift|html|css)$/i;
 class Busy extends Error {}
+// Sign in with GitHub: the helper (auth/worker.js) hands back a token in the address fragment.
+// It has no permissions (public data only) and stays in this browser tab.
+const AUTH_URL = '';
+let TOKEN = null, ME = null;
+try { TOKEN = sessionStorage.getItem('ccu-token'); ME = sessionStorage.getItem('ccu-me'); } catch(e) {}
+{ const m = location.hash.match(/token=([^&]+)/);
+  if (m) { TOKEN = decodeURIComponent(m[1]); try { sessionStorage.setItem('ccu-token', TOKEN); } catch(e) {}
+    try { history.replaceState(null, '', location.pathname + location.search); } catch(e) {} } }
+async function whoAmI(){
+  if (!TOKEN || ME) return ME;
+  try { const r = await fetch(GH + '/user', {headers: {Accept: 'application/vnd.github+json', Authorization: 'Bearer ' + TOKEN}});
+    if (r.status === 401) { signOut(); return null; }
+    if (r.ok) { ME = (await r.json()).login; try { sessionStorage.setItem('ccu-me', ME); } catch(e) {} } } catch(e) {}
+  return ME;
+}
+function signOut(){ TOKEN = ME = null; try { sessionStorage.removeItem('ccu-token'); sessionStorage.removeItem('ccu-me'); } catch(e) {} }
+function signIn(){ const u = new URLSearchParams(location.search).get('u') || ''; location.href = AUTH_URL + '/login' + (u ? '?u=' + encodeURIComponent(u) : ''); }
 async function gh(path){
-  const r = await fetch(GH + path, {headers: {Accept: 'application/vnd.github+json'}});
+  const r = await fetch(GH + path, {headers: TOKEN ? {Accept: 'application/vnd.github+json', Authorization: 'Bearer ' + TOKEN} : {Accept: 'application/vnd.github+json'}});
+  if (r.status === 401 && TOKEN) { signOut(); return gh(path); }
   if (r.status === 403 || r.status === 429) { const reset = +r.headers.get('x-ratelimit-reset') * 1000; throw new Busy(reset ? new Date(reset).toLocaleTimeString([], {hour:'numeric', minute:'2-digit'}) : 'later'); }
   if (r.status === 404) return null;
   if (r.status === 409) return []; // empty repository
