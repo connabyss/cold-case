@@ -16,7 +16,7 @@ export default {
       const state = crypto.randomUUID();
       const back = (url.searchParams.get('u') || '').replace(/[^A-Za-z0-9-]/g, '').slice(0, 39);
       const gh = new URL('https://github.com/login/oauth/authorize');
-      gh.searchParams.set('client_id', env.GITHUB_CLIENT_ID);
+      gh.searchParams.set('client_id', (env.GITHUB_CLIENT_ID||'').trim());
       gh.searchParams.set('redirect_uri', callback);
       gh.searchParams.set('state', state + '.' + back);
       gh.searchParams.set('allow_signup', 'false');
@@ -33,7 +33,7 @@ export default {
       const r = await fetch('https://github.com/login/oauth/access_token', {
         method: 'POST',
         headers: {Accept: 'application/json', 'Content-Type': 'application/json'},
-        body: JSON.stringify({client_id: env.GITHUB_CLIENT_ID, client_secret: env.GITHUB_CLIENT_SECRET, code, redirect_uri: callback})});
+        body: JSON.stringify({client_id: (env.GITHUB_CLIENT_ID||'').trim(), client_secret: (env.GITHUB_CLIENT_SECRET||'').trim(), code, redirect_uri: callback})});
       const j = await r.json().catch(() => ({}));
       if (!j.access_token) {
         const why = {incorrect_client_credentials: 'The helper\'s client secret doesn\'t match the GitHub app. Make a new secret on GitHub and paste it into GITHUB_CLIENT_SECRET.',
@@ -44,6 +44,15 @@ export default {
       return new Response(null, {status: 302, headers: {
         Location: SITE + (back ? '?u=' + back : '') + '#token=' + encodeURIComponent(j.access_token),
         'Set-Cookie': 'ccu_state=; Path=/; Max-Age=0', 'Referrer-Policy': 'no-referrer'}});
+    }
+
+    if (url.pathname === '/check') {
+      // a health check that never shows the secret itself: only whether it's there and its shape
+      const id = env.GITHUB_CLIENT_ID || '', sec = env.GITHUB_CLIENT_SECRET || '';
+      const lines = [
+        'Client ID: ' + (id ? id.length + ' characters, starts ' + id.slice(0, 4) + (id.trim() !== id ? ', HAS A SPACE OR LINE BREAK' : '') : 'MISSING'),
+        'Client secret: ' + (sec ? sec.length + ' characters (should be 40)' + (sec.trim() !== sec ? ', HAS A SPACE OR LINE BREAK' : '') + (/^[0-9a-f]+$/.test(sec.trim()) ? '' : ', HAS CHARACTERS A SECRET NEVER HAS') : 'MISSING (check the name is exactly GITHUB_CLIENT_SECRET)')];
+      return page(lines.join('<br>'));
     }
 
     return page('Cold Case Unit sign-in helper. Nothing to see here, detective.');
