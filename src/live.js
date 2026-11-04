@@ -7,7 +7,7 @@ const CODE_EXT = /\.(py|js|ts|tsx|jsx|go|rs|java|kt|c|cpp|cs|rb|php|gd|lua|dart|
 class Busy extends Error {}
 // Sign in with GitHub: the helper (auth/worker.js) hands back a token in the address fragment.
 // It has no permissions (public data only) and stays in this browser tab.
-const AUTH_URL = '';
+const AUTH_URL = 'https://cold-case-auth.connharr1230.workers.dev';
 let TOKEN = null, ME = null;
 try { TOKEN = sessionStorage.getItem('ccu-token'); ME = sessionStorage.getItem('ccu-me'); } catch(e) {}
 { const m = location.hash.match(/token=([^&]+)/);
