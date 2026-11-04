@@ -64,8 +64,25 @@ async function loadSuspect(user, progress){
   const key = 'ccu-file-' + user.toLowerCase();
   try { const c = JSON.parse(localStorage.getItem(key) || 'null'); if (c && Date.now() - c.at < 6*H) return c.data; } catch(e) {}
   const u = await gh(`/users/${encodeURIComponent(user)}`); if (!u) return null;
-  const list = await gh(`/users/${encodeURIComponent(user)}/repos?per_page=100&sort=pushed&type=owner`);
-  const metas = (list ? list.json : []).filter(m => !m.fork && !m.private && m.size > 0 && !m.archived).slice(0, 10);
+  // read every project's basic record (100 per call, up to 300), then open full files on at most 10
+  let listed = [];
+  for (let pg = 1; pg <= 3; pg++) { const l = await gh(`/users/${encodeURIComponent(user)}/repos?per_page=100&sort=pushed&type=owner&page=${pg}`); if (!l) break; listed = listed.concat(l.json); if (l.json.length < 100) break; }
+  const own = listed.filter(m => !m.fork && !m.private && m.size > 0);
+  const quietFor = m => Date.now() - Date.parse(m.pushed_at), lifeOf = m => Date.parse(m.pushed_at) - Date.parse(m.created_at);
+  let metas, extra = null;
+  if (own.filter(m => !m.archived).length <= 10) metas = own.filter(m => !m.archived);
+  else {
+    const breathing = own.filter(m => quietFor(m) < 3*D && !m.archived).slice(0, 2);
+    const deadish = own.filter(m => quietFor(m) > 30*D);
+    const shortest = deadish.slice().sort((a,b) => lifeOf(a) - lifeOf(b)).slice(0, 6);
+    const starred = deadish.filter(m => !shortest.includes(m)).sort((a,b) => b.stargazers_count - a.stargazers_count).slice(0, 10 - shortest.length);
+    metas = [...breathing, ...shortest, ...starred];
+    const yearDead = own.filter(m => quietFor(m) > 365*D);
+    const oldest = yearDead.slice().sort((a,b) => quietFor(b) - quietFor(a))[0];
+    extra = {total: u.json.public_repos, listedAll: listed.length, listed: own.length, dead: yearDead.length, archived: own.filter(m => m.archived).length,
+      stars: yearDead.reduce((t,m) => t + m.stargazers_count, 0), forks: yearDead.reduce((t,m) => t + m.forks_count, 0),
+      oldest: oldest ? {name: oldest.name, quiet: quietFor(oldest)} : null, breathing: own.filter(m => quietFor(m) < 365*D && !m.archived).map(m => m.name)};
+  }
   const repos = [];
   for (let i = 0; i < metas.length; i++) { progress && progress(i, metas.length, metas[i].name); const r = await loadRepo(user, metas[i]); if (r) repos.push(r); }
   // the motive: the busiest project only has its last 100 commits here, so fetch its commits around each short-lived death
@@ -79,7 +96,7 @@ async function loadSuspect(user, progress){
         res.json.forEach(x => { const c = {date: x.commit.committer.date, author: x.commit.author.name, msg: (x.commit.message||'').split('\n')[0]}; if (!seen.has(c.date+c.msg)) busy.commits.push(c); }); }
     }
   }
-  const data = {user: u.json.login, avatar: u.json.avatar_url, repos, live: true};
+  const data = {user: u.json.login, avatar: u.json.avatar_url, repos, extra, live: true};
   try { localStorage.setItem(key, JSON.stringify({at: Date.now(), data})); } catch(e) {}
   return data;
 }

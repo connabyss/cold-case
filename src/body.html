@@ -312,14 +312,24 @@ function render(name){
   const shown = s.hidden_owner ? 'Name withheld' : name;
   const all = s.repos.map(r => analyze(r, s));
   const dead = all.filter(c => c.dead), alive = all.filter(c => !c.dead);
-  const mo = dead.length ? profile(dead) : all.length ? [`No bodies found. Suspiciously clean.`, `${all.length} public project${all.length===1?'':'s'}, all still breathing.`, `Most recent sign of life: ${span(NOW - Math.max(...all.map(c=>Date.parse(c.repo.pushed))))} ago.`, `The unit will keep an eye on this one.`] : [`No public projects. No bodies. No fingerprints.`, `Either innocent or very careful.`];
+  const X = s.extra, bodies = X ? Math.max(dead.length, X.dead) : dead.length;
+  const big = X ? [
+    bodies >= 100 ? `Body count: ${bodies.toLocaleString()}. The morgue is full.` : bodies >= 30 ? `Body count: ${bodies}. The morgue is asking questions.` : `Body count: ${bodies}, untouched for over a year.`,
+    X.stars >= 50 ? `The dead hold ${X.stars.toLocaleString()} stars between them. Nobody visits.` : null,
+    X.forks >= 20 ? `${X.forks.toLocaleString()} forks were taken from the dead. Organ donors.` : null,
+    X.oldest ? `Oldest cold case: ${X.oldest.name}, untouched for ${span(X.oldest.quiet)}.` : null,
+    X.archived ? `${X.archived} were laid to rest properly (archived). The rest were just left there.` : null,
+    X.total > X.listedAll + 5 ? `Only the newest ${X.listedAll} were searched. ${(X.total - X.listedAll).toLocaleString()} more are still in the basement.` : null,
+  ].filter(Boolean) : [];
+  const mo0 = dead.length ? profile(dead) : all.length ? [`No bodies found. Suspiciously clean.`, `${all.length} public project${all.length===1?'':'s'}, all still breathing.`, `Most recent sign of life: ${span(NOW - Math.max(...all.map(c=>Date.parse(c.repo.pushed))))} ago.`, `The unit will keep an eye on this one.`] : [`No public projects. No bodies. No fingerprints.`, `Either innocent or very careful.`];
+  const mo = X ? big.concat(mo0.filter(l => !/^Total commits|^First known/.test(l))).slice(0, 6) : mo0;
   out.innerHTML = `<section class="rap poster" aria-label="Wanted poster">
     <div class="wanted">WANTED <span>for questioning</span></div>
     <div class="mug">${s.avatar ? `<img src="${s.avatar}" alt="">` : `<div class="noface">?</div>`}<div class="board">${esc(shown.toUpperCase())}</div></div>
-    <div><div class="k">In connection with</div><div class="count">${dead.length}</div><div class="k">project death${dead.length===1?'':'s'} · ${alive.length} still breathing</div>
+    <div><div class="k">In connection with</div><div class="count">${bodies.toLocaleString()}</div><div class="k">project death${bodies===1?'':'s'} · ${X ? X.breathing.length : alive.length} still breathing</div>
     <div class="k" style="margin-top:14px">Known M.O.</div>
     <ul class="priors">${mo.map(p=>`<li>${esc(p)}</li>`).join('')}</ul></div>
-    <div class="stamp">${dead.length ? (dead.length >= 3 ? 'SERIAL OFFENDER' : 'PERSON OF INTEREST') : 'CLEAN RECORD'}</div></section>
+    <div class="stamp">${bodies >= 50 ? 'MOST WANTED' : bodies ? (bodies >= 3 ? 'SERIAL OFFENDER' : 'PERSON OF INTEREST') : 'CLEAN RECORD'}</div></section>
     ${s.hidden_owner ? '' : `<div class="sharerow"><button id="mkcard">THIS IS ME: MAKE MY POSTER</button><span>Only make your own. Stamps from the court are included.</span></div>`}`;
   out.insertAdjacentHTML('beforeend', `<div class="social">
     <form id="cmpform"><label class="k" for="cmpwho">Compare rap sheets with</label><div class="row"><input id="cmpwho" placeholder="a friend's username" autocomplete="off" spellcheck="false"><button class="ghost" type="submit">COMPARE</button></div></form>
@@ -336,9 +346,12 @@ function render(name){
   if (mk) mk.onclick = async () => { mk.disabled = true; mk.textContent = 'DEVELOPING…'; SFX.thud();
     const ex = dead[0] && dead[0].clues[0] ? ['Exhibit A: ' + dead[0].clues[0].text.replace(/<[^>]+>/g,'').replace(/&quot;/g,'"').replace(/&amp;/g,'&')] : [];
     const url = await shareCard(s, shown, dead, alive, mo.slice(0,2).concat(ex)); mk.disabled = false; mk.textContent = 'THIS IS ME: MAKE MY POSTER'; showCard(url, shown); };
-  if (dead.length) out.appendChild(stack(dead, 'THE VICTIMS', {thoughts: thoughts(dead), court: () => court(shown, dead, alive, out)}));
+  const th = thoughts(dead);
+  if (bodies >= 100) th.splice(0, th.length, {at: 0, text: `${bodies.toLocaleString()} files. I'm going to need a bigger desk.`}, ...th.filter(t => t.at > 0).slice(0,1));
+  if (dead.length) out.appendChild(stack(dead, X && bodies > dead.length ? `THE ${dead.length} MOST NOTABLE OF ${bodies.toLocaleString()}` : 'THE VICTIMS', {thoughts: th, court: () => court(shown, dead, alive, out)}));
   else out.insertAdjacentHTML('beforeend', `<p class="thought">${all.length ? `${all.length} project${all.length===1?'':'s'}, all still breathing. I don't trust it.` : `Nothing here. You can't kill a project you never started.`}</p>`);
-  if (alive.length) out.insertAdjacentHTML('beforeend', `<p class="alive">Still breathing: ${alive.map(c=>`<b>${esc(c.repo.name)}</b> (last touched ${span(NOW - Date.parse(c.repo.pushed))} ago)`).join(', ')}. For now.</p>`);
+  const more = X ? X.breathing.filter(n => !alive.some(c => c.repo.name === n) && !dead.some(c => c.repo.name === n)).length : 0;
+  if (alive.length) out.insertAdjacentHTML('beforeend', `<p class="alive">Still breathing: ${alive.slice(0,10).map(c=>`<b>${esc(c.repo.name)}</b> (last touched ${span(NOW - Date.parse(c.repo.pushed))} ago)`).join(', ')}${more ? `, and ${more} more` : ''}. For now.</p>`);
 }
 document.getElementById('intake').addEventListener('submit', e => { e.preventDefault(); openSuspect(document.getElementById('who').value.trim().replace(/^@/,'')); });
 document.querySelectorAll('[data-open]').forEach(b => b.addEventListener('click', () => openSuspect(b.dataset.open)));
