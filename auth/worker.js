@@ -35,7 +35,12 @@ export default {
         headers: {Accept: 'application/json', 'Content-Type': 'application/json'},
         body: JSON.stringify({client_id: env.GITHUB_CLIENT_ID, client_secret: env.GITHUB_CLIENT_SECRET, code, redirect_uri: callback})});
       const j = await r.json().catch(() => ({}));
-      if (!j.access_token) return page('GitHub said no. Go back and try again.');
+      if (!j.access_token) {
+        const why = {incorrect_client_credentials: 'The helper\'s client secret doesn\'t match the GitHub app. Make a new secret on GitHub and paste it into GITHUB_CLIENT_SECRET.',
+          redirect_uri_mismatch: 'The callback address on the GitHub app doesn\'t match ' + callback + '.',
+          bad_verification_code: 'That sign-in code was already used or expired. Go back and try again.'}[j.error];
+        return page('GitHub said no. ' + (why || 'Go back and try again.') + (j.error ? ' (GitHub\'s reason: ' + String(j.error).replace(/[^a-z_]/g, '') + ')' : ''));
+      }
       return new Response(null, {status: 302, headers: {
         Location: SITE + (back ? '?u=' + back : '') + '#token=' + encodeURIComponent(j.access_token),
         'Set-Cookie': 'ccu_state=; Path=/; Max-Age=0', 'Referrer-Policy': 'no-referrer'}});
