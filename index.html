@@ -1,0 +1,869 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cold Case Unit</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Stencil+Display:wght@700;900&family=Courier+Prime:ital,wght@0,400;0,700;1,400&display=swap">
+<style>
+/* Layout: a detective's desk at night. Intake form, then the suspect's rap sheet, then one manila folder per dead project. */
+:root{
+  --night:#0d0f14; --desk:#161a22; --manila:#dccca5; --manila-edge:#c6b48a; --ink:#2a2118; --ink-soft:#6b5a40;
+  --tape:#e8c23a; --stamp:#a8261d; --chalk:#ece7da; --dim:#8a8778;
+  --display:"Big Shoulders Stencil Display", Impact, "Arial Narrow", sans-serif;
+  --type:"Courier Prime", "Courier New", Courier, monospace;
+  color-scheme:dark;
+}
+body{background:var(--night);color:var(--chalk);font-family:var(--type);font-size:16px;line-height:1.5;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:0 64px}
+.wrap{max-width:1040px;margin:0 auto}
+.tape{background:var(--tape);color:#111;font:900 15px/1 var(--display);letter-spacing:.35em;padding:9px 0;white-space:nowrap;overflow:hidden;
+  margin-inline:calc(-1 * max(16px,env(safe-area-inset-left,0px)));transform:rotate(-1.2deg);margin-top:22px}
+header{padding-block:40px 18px;display:grid;gap:10px}
+.eyebrow{font:700 14px var(--display);letter-spacing:.3em;color:var(--tape)}
+h1{font:900 clamp(44px,8vw,92px)/.92 var(--display);letter-spacing:.01em;margin:0;text-wrap:balance}
+.lede{color:var(--dim);max-width:60ch;margin:0}
+form{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}
+label.sr{position:absolute;left:-9999px}
+input{flex:1 1 240px;min-width:0;background:var(--desk);border:1px solid #2c3240;color:var(--chalk);font:400 18px var(--type);padding:12px 14px;border-radius:2px}
+input:focus-visible,button:focus-visible{outline:2px solid var(--tape);outline-offset:2px}
+button{background:var(--tape);color:#111;border:0;font:900 18px var(--display);letter-spacing:.12em;padding:12px 22px;cursor:pointer;border-radius:2px}
+button.ghost{background:transparent;color:var(--chalk);border:1px solid #3a4150;font-size:15px;padding:8px 14px}
+.onfile{display:flex;gap:8px;flex-wrap:wrap;align-items:center;color:var(--dim);font-size:14px;margin-top:4px}
+.notice{color:var(--tape);font-size:14px;min-height:1.5em}
+/* rap sheet */
+.rap{margin-top:34px;background:var(--manila);color:var(--ink);display:grid;grid-template-columns:150px 1fr;gap:22px;padding:24px;position:relative;box-shadow:0 18px 50px rgba(0,0,0,.6)}
+.rap .mug{display:grid;gap:6px;align-content:start}
+.rap img{width:150px;height:150px;object-fit:cover;filter:grayscale(1) contrast(1.15);border:3px solid var(--ink)}
+.board{background:var(--ink);color:var(--manila);font:700 13px var(--type);text-align:center;padding:4px;letter-spacing:.08em}
+.rap h2{font:900 34px/1 var(--display);margin:0 0 4px;letter-spacing:.04em}
+.k{font-size:12px;letter-spacing:.18em;color:var(--ink-soft);text-transform:uppercase}
+.priors{display:grid;gap:6px;margin:10px 0 0;padding:0;list-style:none}
+.priors li{border-top:1px dashed var(--manila-edge);padding-top:6px}
+.stamp{position:absolute;right:22px;top:18px;border:4px solid var(--stamp);color:var(--stamp);font:900 26px/1 var(--display);padding:6px 12px;transform:rotate(8deg);letter-spacing:.1em;opacity:.85}
+/* folders */
+.cases{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,470px),1fr));gap:28px;margin-top:34px}
+.folder{background:var(--manila);color:var(--ink);padding:22px 22px 18px;position:relative;box-shadow:0 14px 40px rgba(0,0,0,.55);min-width:0}
+.folder::before{content:"";position:absolute;left:18px;top:-14px;width:120px;height:16px;background:var(--manila-edge);clip-path:polygon(8% 0,92% 0,100% 100%,0 100%)}
+.folder h3{font:900 28px/1 var(--display);margin:2px 0 2px;letter-spacing:.03em;overflow-wrap:anywhere}
+.meta{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:14px 0;font-variant-numeric:tabular-nums}
+.meta div{min-width:0}.meta .v{font-weight:700;font-size:15px;overflow-wrap:anywhere}
+.clues{list-style:none;margin:0;padding:0;display:grid;gap:10px}
+.clues li{padding-left:28px;position:relative}
+.clues li::before{content:attr(data-n);position:absolute;left:0;top:2px;width:20px;height:18px;background:var(--tape);color:#111;font:700 12px/18px var(--type);text-align:center;clip-path:polygon(50% 0,100% 100%,0 100%);padding-top:2px}
+.last{margin-top:14px;padding:10px 12px;background:rgba(42,33,24,.08);border-left:3px solid var(--ink);font-style:italic;overflow-wrap:anywhere}
+.ruling{margin-top:12px;font:900 19px/1.15 var(--display);letter-spacing:.06em;color:var(--stamp);text-transform:uppercase}
+.alive{color:var(--dim);font-size:15px;margin-top:20px}
+.alive b{color:var(--chalk)}
+.section-k{margin-top:46px;font:700 14px var(--display);letter-spacing:.3em;color:var(--tape)}
+footer{margin-top:50px;color:var(--dim);font-size:13px;max-width:70ch}
+@media (max-width:560px){.rap{grid-template-columns:1fr}.rap img{width:110px;height:110px}.stamp{font-size:18px}.meta{grid-template-columns:1fr 1fr}}
+@media (prefers-reduced-motion:no-preference){.folder{animation:drop .5s ease-out both}}
+@keyframes drop{from{transform:translateY(8px)}to{transform:none}}
+/* poster, witness, funeral, stack, court */
+.poster{grid-template-columns:170px 1fr;border:2px solid var(--ink);outline:8px solid var(--manila);outline-offset:-14px}
+.wanted{grid-column:1/-1;font:900 clamp(48px,9vw,96px)/.85 var(--display);letter-spacing:.06em;text-align:center;border-bottom:3px solid var(--ink);padding-bottom:10px}
+.wanted span{display:block;font-size:.26em;letter-spacing:.4em;margin-top:6px}
+.count{font:900 84px/.9 var(--display);color:var(--stamp)}
+.noface{width:150px;height:150px;border:3px solid var(--ink);display:grid;place-items:center;font:900 90px var(--display);color:var(--ink-soft);background:repeating-linear-gradient(0deg,transparent 0 18px,rgba(42,33,24,.15) 18px 19px)}
+.poster .stamp{top:auto;bottom:22px}
+.witness{margin-top:14px;padding:10px 12px;border:1px dashed var(--ink-soft)}
+.funeral{margin-top:12px;font-style:italic;color:var(--ink-soft)}
+.stack{margin-top:10px;scroll-margin-top:16px}
+.stack .folder{margin-top:22px;max-width:640px}
+.flip{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-top:18px;max-width:640px}
+.flip span{color:var(--dim);flex:1;text-align:center}
+.flip button:disabled{opacity:.35;cursor:default}
+.thought{font-style:italic;color:var(--tape);max-width:60ch;margin:18px 0 0;font-size:17px}
+.thought::before{content:"— ";}
+.court{margin-top:44px;scroll-margin-top:16px;max-width:640px}
+.court h2{font:900 clamp(30px,5vw,48px)/1 var(--display);margin:8px 0}
+.pleas{display:flex;gap:12px;flex-wrap:wrap;margin-top:16px}
+.sentence{margin-top:20px;font:900 24px/1.15 var(--display);color:var(--tape);letter-spacing:.04em}
+.pending{margin-top:20px;border:3px dashed var(--stamp)}
+.tally{color:var(--dim);font-size:14px;margin-top:14px}
+body.reopen::after{content:"CASE REOPENED · CASE REOPENED · CASE REOPENED · CASE REOPENED · CASE REOPENED";position:fixed;left:-20vw;right:-20vw;top:45%;background:var(--tape);color:#111;font:900 clamp(22px,4vw,40px)/1 var(--display);letter-spacing:.3em;padding:14px 0;white-space:nowrap;overflow:hidden;transform:rotate(-8deg);z-index:9;pointer-events:none;animation:slap 2.4s ease-out forwards}
+@keyframes slap{0%{transform:rotate(-8deg) translateX(-110%)}12%{transform:rotate(-8deg) translateX(0)}80%{opacity:1}100%{opacity:0;transform:rotate(-8deg)}}
+@media (max-width:560px){.poster{grid-template-columns:1fr}.noface{width:110px;height:110px}.count{font-size:64px}}
+/* theatre */
+.social{display:grid;gap:14px;margin-top:22px;max-width:760px}
+.social .row{display:flex;gap:8px;flex-wrap:wrap;margin-top:6px}
+.social input{flex:1 1 200px;font-size:16px;padding:9px 12px}
+.lineup{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,260px),1fr));gap:18px;margin-top:14px}
+.mini{background:var(--manila);color:var(--ink);padding:18px;position:relative;box-shadow:0 12px 32px rgba(0,0,0,.5);overflow:hidden}
+.mini h3{font:900 26px/1 var(--display);margin:4px 0;overflow-wrap:anywhere}
+.mini .count{font-size:64px}
+.ministamp{position:absolute;right:12px;top:16px;border:4px solid var(--stamp);color:var(--stamp);font:900 22px/1 var(--display);padding:6px 10px;transform:rotate(9deg);animation:slam .32s ease-in both}
+.sharerow{display:flex;gap:14px;align-items:center;flex-wrap:wrap;margin-top:16px;color:var(--dim);font-size:14px}
+.cardbox{position:fixed;inset:0;background:rgba(0,0,0,.82);display:grid;place-items:center;z-index:20;padding:16px}
+.cardinner{max-width:min(1000px,100%);display:grid;gap:12px}
+.cardinner img{width:100%;height:auto;box-shadow:0 20px 60px rgba(0,0,0,.7)}
+.cardrow{display:flex;gap:14px;align-items:center;flex-wrap:wrap;color:var(--dim);font-size:14px}
+.btnlink{background:var(--tape);color:#111;font:900 18px var(--display);letter-spacing:.12em;padding:12px 22px;text-decoration:none;border-radius:2px}
+.snd{position:absolute;top:58px;right:max(16px,env(safe-area-inset-right,0px));font-size:13px;padding:6px 12px}
+.bigstamp.s2{left:80%;top:22%;font-size:clamp(28px,5vw,52px);border-width:5px;transform:translate(-50%,-50%) rotate(9deg);animation-name:slam2}
+.bigstamp.s3{left:30%;top:80%;font-size:clamp(28px,5vw,52px);border-width:5px;transform:translate(-50%,-50%) rotate(-4deg);animation-name:slam3}
+@keyframes slam2{0%{transform:translate(-50%,-50%) scale(3) rotate(20deg);opacity:0}70%{transform:translate(-50%,-50%) scale(.95) rotate(9deg)}100%{transform:translate(-50%,-50%) rotate(9deg);opacity:.9}}
+@keyframes slam3{0%{transform:translate(-50%,-50%) scale(3) rotate(-14deg);opacity:0}70%{transform:translate(-50%,-50%) scale(.95) rotate(-4deg)}100%{transform:translate(-50%,-50%) rotate(-4deg);opacity:.9}}
+.pending s{opacity:.55;font-weight:400}
+.wait{opacity:0}
+.witness,.last,.funeral,.ruling{transition:opacity .35s}
+@keyframes inR{from{transform:translateX(60px) rotate(2deg);opacity:0}to{transform:none;opacity:1}}
+@keyframes inL{from{transform:translateX(-60px) rotate(-2deg);opacity:0}to{transform:none;opacity:1}}
+.in-right{animation:inR .45s cubic-bezier(.2,.8,.3,1) both}.in-left{animation:inL .45s cubic-bezier(.2,.8,.3,1) both}
+@keyframes slam{0%{transform:scale(2.6) rotate(-6deg);opacity:0}60%{transform:scale(.94) rotate(-2deg);opacity:1}100%{transform:rotate(-2deg)}}
+.ruling.slam{animation:slam .32s ease-in both;transform-origin:left center;display:inline-block}
+@keyframes shake{0%,100%{transform:none}20%{transform:translate(-5px,3px)}40%{transform:translate(5px,-3px)}60%{transform:translate(-3px,2px)}80%{transform:translate(2px,-1px)}}
+body.shake .wrap{animation:shake .35s}
+.bigstamp{position:absolute;left:50%;top:46%;transform:translate(-50%,-50%) rotate(-12deg);border:8px solid var(--stamp);color:var(--stamp);font:900 clamp(60px,12vw,130px)/1 var(--display);padding:8px 26px;letter-spacing:.08em;mix-blend-mode:multiply;pointer-events:none;animation:bigslam .4s ease-in both}
+@keyframes bigslam{0%{transform:translate(-50%,-50%) scale(3) rotate(-20deg);opacity:0}70%{transform:translate(-50%,-50%) scale(.95) rotate(-12deg);opacity:.95}100%{transform:translate(-50%,-50%) rotate(-12deg);opacity:.9}}
+.folder{cursor:default}
+</style>
+<div class="tape" aria-hidden="true">CRIME SCENE · DO NOT CROSS · CRIME SCENE · DO NOT CROSS · CRIME SCENE · DO NOT CROSS · CRIME SCENE · DO NOT CROSS · CRIME SCENE · DO NOT CROSS</div>
+<div class="wrap">
+<header>
+  <div class="eyebrow">COLD CASE UNIT · GITHUB DIVISION</div>
+  <h1>Somebody killed all these projects.</h1>
+  <p class="lede">The commit log says it was you. Type a GitHub username and we'll open a file on every project its owner walked away from, built only from facts in the public history.</p>
+  <form id="intake">
+    <label class="sr" for="who">GitHub username</label>
+    <input id="who" name="who" placeholder="github username" autocomplete="off" spellcheck="false" value="">
+    <button type="submit">OPEN THE CASE</button>
+  </form>
+<div class="onfile">Try one: <button class="ghost" type="button" data-open="connabyss">connabyss</button></div>
+  <button class="ghost snd" type="button" id="snd" aria-pressed="true">♪ Sound on</button>
+  <div class="notice" id="notice" role="status"></div>
+</header>
+<main id="out"><!--INTRO--><!--/INTRO--></main>
+<footer>Every line comes from the public GitHub record, read live in your browser: commit dates and messages, README text, file lists, stars and forks. Nothing is stored on a server. Only public projects are looked at. It roasts code, not people.</footer>
+</div>
+<script>
+const LIVE = true;
+const DATA = {"suspects": {}, "strangers": []};
+const NOW = LIVE ? new Date() : new Date('2026-11-04T06:30:00Z');
+const H = 3600e3, D = 24*H;
+const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const q = s => '“' + esc(String(s).trim().replace(/[.!]+$/,'')) + '”';
+// commit dates keep the committer's own UTC offset: read the wall clock from the string itself
+function clock(iso){
+  const m = iso.match(/^(\d{4})-(\d\d)-(\d\d)T(\d\d):(\d\d)/); const off = iso.slice(19);
+  const mon = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][+m[2]-1];
+  let h = +m[4]; const ap = h>=12?'PM':'AM'; h = h%12||12;
+  const utc = (off==='Z'||off==='+00:00');
+  return {date:`${mon} ${+m[3]}, ${m[1]}`, time:`${h}:${m[5]} ${ap}`, hour:+m[4], utc, day:`${mon} ${+m[3]}, ${m[1]}`, label:`${mon} ${+m[3]}${m[1]!=='2026'?', '+m[1]:''}, ${h}:${m[5]} ${ap}${utc?' UTC':''}`};
+}
+// show a date on another commit's clock, so Born and Last seen read on the same clock
+function onClock(iso, ref){
+  const off = ref.slice(19); if (off === 'Z') return new Date(Date.parse(iso)).toISOString().slice(0,19) + 'Z';
+  const sgn = off[0]==='-'?-1:1, mins = sgn*(+off.slice(1,3)*60 + +off.slice(4,6));
+  return new Date(Date.parse(iso) + mins*60e3).toISOString().slice(0,19) + off;
+}
+function span(ms){
+  const min = Math.round(ms/60e3);
+  if (min < 1) { const s = Math.round(ms/1000); return s < 2 ? 'a second' : s + ' seconds'; }
+  if (min < 120) return min + ' minute' + (min===1?'':'s');
+  const h = Math.round(ms/H); if (h < 48) return h + ' hours';
+  const d = Math.round(ms/D); if (d < 60) return d + ' days';
+  const mo = Math.round(d/30.4); if (mo < 24) return mo + ' months';
+  return (d/365).toFixed(1) + ' years';
+}
+const FIRST = /^(first commit|initial commit|init|第一次提交|初始提交|primer commit)\.?$/i;
+const READMEISH = /^(readme(\.\w+)?|license(\.\w+)?|\.gitignore|\.gitattributes)$/i;
+
+// ===== Clue library: keyword families, each with its own deadpan lines =====
+// Each rule: id, score, where it looks, a test that returns a match, and 1-3 lines.
+// A repo always gets the same line for a rule (picked by a hash of its name), so a share is stable.
+const cap = s => s.charAt(0).toUpperCase() + s.slice(1);
+const plural = (k, w) => `${k} ${w}${k===1?'':'s'}`;
+function hash(s){ let h = 2166136261; for (const ch of s) { h ^= ch.codePointAt(0); h = Math.imul(h, 16777619); } return h >>> 0; }
+const DAYS = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+const localDay = iso => { const [y,m,d] = iso.slice(0,10).split('-').map(Number); return new Date(Date.UTC(y,m-1,d)); };
+const words = s => s.replace(/([a-z])([A-Z])/g,'$1 $2').replace(/[-_]/g,' ');
+function readmeLines(r){ return r.readme_head.split('\n').map(s=>s.replace(/^[#>*\s-]+/,'').replace(/[*_`]/g,'').trim()).filter(s=>s && !/^!\[|^<|^\[!|^---|^license:/i.test(s)); }
+function opener(r){ const ls = readmeLines(r).map(l=>l.replace(/\[([^\]]*)\]\([^)]*\)/g,'$1'));
+  const body = ls.find((l,i)=> i>0 || ls.length===1) || ''; let s = body.split(/(?<=[.!?。])\s/)[0]||'';
+  if (s.length > 120) s = s.slice(0,120).replace(/\s+\S*$/,'') + '…'; return s; }
+const LAZY = /^(update|updates|updated|changes|change|stuff|wip|asdf+|test|testing|ok|\.+|minor|commit|save|done|idk|lol|-|x+|a+|new|upload|edit|edits|code|files|more)$/i;
+
+const LIB = [
+  // ---- what the README and description promised ----
+  {id:'forever', score:10, on:'claim', re:/\b(forever|never dies?|don't stay dead|stays? alive|immortal|eternal|built to last|survives?)\b/i,
+   lines:[(x,m)=>`It promised ${q(m[0])}. It lasted ${span(x.life)}.`, (x,m)=>`${q(cap(m[0]))}, said the README. ${span(x.life)}, said the commit log.`]},
+  {id:'active', score:12, on:'claim', re:/(under|in) (active|heavy|constant|continuous) development|actively (maintained|developed)|regularly updated|updated (daily|weekly|regularly)|more (features )?(coming|to come)/i,
+   lines:[(x,m)=>`The README says ${q(m[0])}. The last commit was ${span(x.quiet)} ago.`, (x,m)=>`${q(cap(m[0]))}. Last sign of development: ${span(x.quiet)} ago.`]},
+  {id:'soon', score:8, on:'readme', re:/[^\n]*(coming soon|stay tuned|work in progress|\bwip\b|roadmap|to be continued|more to come)[^\n]*/i,
+   lines:[(x,m)=>`The README promised ${q(m[0].replace(/\[[ x]\]|[#*>`|-]/g,' ').replace(/\s+/g,' ').trim().slice(0,90))}. That was ${span(x.quiet)} ago.`, (x,m)=>`${q(cap(m[1].toLowerCase()))}, it said. ${span(x.quiet)} later, still coming.`]},
+  {id:'later', score:12, on:'readme', re:/[^\n.]*(will be (uploaded|released|available|added|published|open[- ]sourced)|(code|model|dataset)s? (is |are )?coming|to be released|release (the )?code (soon|after|once))[^\n.]*/i,
+   lines:[(x,m)=>`The README says ${q(m[0].replace(/[#*>`]/g,'').trim().slice(0,120))}. It's been ${span(x.quiet)}.`]},
+  {id:'fast', score:9, on:'claim', re:/blazing(ly)?[- ]fast|lightning[- ]fast|super[- ]fast|ultra[- ]fast|high[- ]performance|insanely fast/i,
+   lines:[(x,m)=>`Described as ${q(m[0].toLowerCase())}. It was: dead in ${span(x.life)}.`, (x,m)=>`${q(cap(m[0].toLowerCase()))}. Last commit ${span(x.quiet)} ago.`]},
+  {id:'all', score:8, on:'claim', re:/all[- ]in[- ]one|the ultimate|everything you need|one[- ]stop|fully[- ]featured|comprehensive|fully functional|full[- ]stack/i,
+   lines:[(x,m)=>`It promised to be ${q(m[0].toLowerCase())}. It managed ${plural(x.n,'commit')}.`, (x,m)=>`${q(cap(m[0].toLowerCase()))}. Total body: ${plural(x.files,'file')}.`]},
+  {id:'prod', score:8, on:'claim', re:/production[- ]ready|enterprise[- ]grade|battle[- ]tested|at scale|highly scalable|\brobust\b/i,
+   lines:[(x,m)=>`It called itself ${m[0].toLowerCase()}. Stars: ${x.r.stars}. Production is still waiting.`, (x,m)=>`It called itself ${m[0].toLowerCase()}. It didn't survive ${span(x.quiet)} of nothing.`]},
+  {id:'future', score:7, on:'claim', re:/next[- ]gen(eration)?|revolutionary|game[- ]changing|cutting[- ]edge|state[- ]of[- ]the[- ]art|the future of/i,
+   lines:[(x,m)=>`${q(cap(m[0].toLowerCase()))}. The future stopped arriving ${span(x.quiet)} ago.`, (x,m)=>`It called itself ${q(m[0].toLowerCase())}. It is now ${span(x.quiet)} out of date.`]},
+  {id:'simple', score:5, on:'claim', re:/\b(an?|the) (simple|easy|effortless|lightweight|minimal(ist)?|tiny)\b/i,
+   lines:[(x,m)=>`It called itself ${m[2].toLowerCase()}. Leaving it was even easier.`, (x,m)=>`It called itself ${m[2].toLowerCase()}. So was walking away.`]},
+  {id:'award', score:7, on:'claim', re:/\b(1st|first|2nd|second|3rd|third)[- ]place\b|\bwinning solution\b|\baccepted (by|at|to) [A-Z][\w ]{1,20}/i,
+   lines:[(x,m)=>`It won ${m[0].toLowerCase()}. Its last commit was ${span(x.quiet)} ago.`, (x,m)=>`It won ${m[0].toLowerCase()}. Its reward: ${span(x.quiet)} alone.`]},
+  {id:'paper', score:6, on:'claim', re:/official (pytorch |tensorflow )?(implementation|code)|code for (the|our) paper|code for the work presented|supplementary (data and )?code/i,
+   lines:[x=>`The official code for a paper. The paper got published. The code got left.`, x=>`It existed so a paper could cite it. The citation is still alive.`]},
+  {id:'clone', score:10, on:'title', re:/([A-Za-z0-9.]+)[\s_-]?clone\b/i,
+   lines:[(x,m)=>`A ${m[1]} clone. ${m[1]} is doing fine.`, (x,m)=>`It set out to copy ${m[1]}. ${m[1]} never noticed.`]},
+  {id:'todo', score:10, on:'title', re:/\bto[- ]?do (app|list)\b|\btodo ?app\b/i,
+   lines:[x=>`A to-do app. Finishing it is still on someone's list.`, x=>`A to-do app with one item left: itself.`]},
+  {id:'portfolio', score:7, on:'title', re:/\bportfolio\b|personal (web)?site|personal blog/i,
+   lines:[x=>`A personal portfolio. The person moved on ${span(x.quiet)} ago.`, x=>`It showed off its owner's work. The work stopped ${span(x.quiet)} ago.`]},
+  {id:'weather', score:9, on:'title', re:/\bweather\b/i, lines:[x=>`A weather app. Current conditions: no commits for ${span(x.quiet)}.`]},
+  {id:'calc', score:9, on:'title', re:/\bcalculator\b/i, lines:[x=>`A calculator. Final count: ${plural(x.n,'commit')}.`]},
+  {id:'game', score:8, on:'head', re:/\b(game|2048|tetris|snake|chess|tic[- ]?tac[- ]?toe|pong|sudoku|platformer)\b/i,
+   lines:[x=>`A game. Game over after ${plural(x.n,'commit')}.`, x=>`A game. Nobody pressed continue.`]},
+  {id:'landing', score:9, on:'title', re:/\blanding[- ]page\b/i, lines:[x=>`A landing page. Nobody landed.`]},
+  {id:'shop', score:5, on:'title', re:/e-?commerce|online (store|shop)|\bshop(ping)? (app|site|cart)\b/i, lines:[x=>`An online store. Closed ${span(x.quiet)} ago. No sign on the door.`]},
+  {id:'bot', score:5, on:'title', re:/\b(discord|telegram|whatsapp|slack|twitter) ?bot\b/i, lines:[(x,m)=>`A ${m[1]} bot. Even the bot gave up ${span(x.quiet)} ago.`]},
+  {id:'hack', score:6, on:'claim', re:/\bhackathon\b|\bgame ?jam\b/i, lines:[(x,m)=>`Built for a ${m[0].toLowerCase()}. The ${m[0].toLowerCase()} ended. So did this.`]},
+  {id:'awesome', score:7, on:'name', re:/^awesome/i, lines:[x=>`An awesome list. The last awesome thing was added ${span(x.quiet)} ago.`]},
+  {id:'learn', score:4, on:'head', re:/\b(practice|tutorial|bootcamp|homework|assignment|exercises|my first|learn(ing)? (javascript|python|react|java|c\+\+|rust|go|to code|web))\b/i,
+   lines:[x=>`A learning project. Lesson learned in ${span(x.life)}.`, x=>`It was practice. Practice ended ${span(x.quiet)} ago.`]},
+  {id:'ai', score:3, on:'title', re:/\b(ai|gpt|llm|chatbot|agentic|rag|langchain|gemini|openai)\b/i,
+   lines:[x=>`It was powered by AI. Then by nobody.`, x=>`An AI project. The humans stopped committing ${span(x.quiet)} ago.`]},
+  // ---- the README itself ----
+  {id:'template', score:10, on:'readme', re:/This project was bootstrapped with|Getting Started with Create React App|A new Flutter project|This template (should help|provides a minimal setup)|^#+ ?Project Title|create-next-app|Welcome to your new/im,
+   lines:[x=>`Its README is still the template. It never introduced itself.`, x=>`Its README was written by a setup tool, not by its owner.`]},
+  {id:'tinyreadme', score:10, test:x=>{ const t = readmeLines(x.r).join(' '); return x.r.readme_words>0 && x.r.readme_words<=4 && t && [t]; },
+   lines:[(x,m)=>{ const t = m[0].replace(/\s+/g,' ').trim(); return /^(\S ){3,}\S$/.test(t) ? `Its entire README: ${q(t.replace(/ /g,''))}, typed with a space between every letter.` : `Its entire README: ${q(t)}.`; }]},
+  {id:'noreadme', score:5, test:x=> x.r.readme_words===0 && [1], lines:[x=>`No README. It died without a name tag.`]},
+  // ---- what the commits said ----
+  {id:'commitmsg', score:12, test:x=> x.n>1 && x.cs.find(c=>c.msg.trim() && /^(commit message|message|commit|no message|\.)$/i.test(c.msg.trim())),
+   lines:[(x,c)=>`One of its commit messages is, word for word, ${q(c.msg)}.`]},
+  {id:'emptymsg', score:11, test:x=> x.n>1 && x.cs.find(c=>!c.msg.trim()), lines:[x=>`One of its commit messages is completely empty. It had nothing left to say.`]},
+  {id:'readmespam', score:10, test:x=>{ const k = x.cs.filter(c=>/^(update|create|edit) readme(\.md)?$/i.test(c.msg.trim())).length; return k>=3 && k/x.n>=.3 && [k]; },
+   lines:[(x,m)=>`${m[0]} of its ${x.n} commits are GitHub's default ${q('Update README.md')}.`, (x,m)=>`${m[0]} commits say ${q('Update README.md')}. It kept polishing the headstone.`]},
+  {id:'upload', score:7, test:x=>{ const k = x.cs.filter(c=>/^add files via upload$/i.test(c.msg.trim())).length; return k>=2 && [k]; },
+   lines:[(x,m)=>`${m[0]} commits say ${q('Add files via upload')}. It was dragged in through the browser, one armful at a time.`]},
+  {id:'final', score:10, test:x=>{ const i = x.cs.findIndex(c=>/^(final|finally|done|finished|complete|last commit|final (commit|version|fix|push|update|touches))\b[.!]*$/i.test(c.msg.trim()) || /\bfinal (commit|version)\b/i.test(c.msg)); return i>=0 && [i]; },
+   lines:[(x,m)=>{ const c = x.cs[m[0]], after = x.n-1-m[0]; return after ? `A commit called ${q(c.msg)}. ${plural(after,'more commit')} came after it.` : `Its last commit is called ${q(c.msg)}. It meant it.`; }]},
+  {id:'beg', score:10, test:x=> x.cs.find(c=>!/^merge/i.test(c.msg) && /please work|pls work|plz work|hope (this|it) works|why (is|does|won't)|\bwtf\b|\bugh\b|i give up|giving up|doesn'?t work|not working|still broken|help me/i.test(c.msg)),
+   lines:[(x,c)=>`From the commit log, ${clock(c.date).day}: ${q(c.msg)}.`, (x,c)=>`Exhibit A, a commit message: ${q(c.msg)}.`]},
+  {id:'works', score:8, test:x=> x.cs.find(c=>/\b(it works|works now|finally work(s|ing)|working now|now works)\b/i.test(c.msg)),
+   lines:[(x,c)=>`${q(cap(c.msg))}, it said. Then nobody came back to use it.`]},
+  {id:'oops', score:5, test:x=>{ const k = x.cs.filter(c=>/\b(oops|whoops|typo|my bad|sorry)\b/i.test(c.msg)).length; return k>=2 && [k]; },
+   lines:[(x,m)=>`It apologized to itself ${m[0]} times (“oops”, “typo”).`]},
+  {id:'revert', score:6, test:x=>{ const k = x.cs.filter(c=>/^revert/i.test(c.msg)).length; return k>=2 && [k]; },
+   lines:[(x,m)=>`It reverted itself ${m[0]} times. Then it stopped arguing.`]},
+  {id:'version', score:7, test:x=>{ const vs = x.cs.map(c=>!/ from \S+ to /i.test(c.msg) && /^(v|version|release|bump|bumping)\b|^v?\d+\.\d+\.\d+/i.test(c.msg.trim()) && [...c.msg.matchAll(/\bv?(\d+)\.(\d+)\.(\d+)\b/g)].pop()).filter(Boolean); if (vs.length<3) return false;
+      const top = vs.map(v=>[+v[1],+v[2],+v[3]]).sort((a,b)=>b[0]-a[0]||b[1]-a[1]||b[2]-a[2])[0]; return [top, vs.length]; },
+   lines:[(x,m)=>`It shipped ${m[1]} versions, up to ${m[0].join('.')}. Version ${m[0][0]}.${m[0][1]}.${m[0][2]+1} never came.`]},
+  {id:'lazy', score:7, test:x=>{ const lz = x.cs.filter(c=>LAZY.test(c.msg.trim())); return x.n>=5 && lz.length/x.n>=.6 && [lz.length]; },
+   lines:[(x,m)=>`${m[0]} of its ${x.n} commits are one word long. It never explained itself.`]},
+  {id:'deadratio', score:11, test:x=>{ const r = x.quiet / x.life; return x.n>1 && x.life >= 60e3 && r >= 50 && [Math.round(r)]; },
+   lines:[(x,m)=>`It was alive for ${span(x.life)}. It has now been dead ${m[0].toLocaleString()} times longer.`, (x,m)=>`Alive: ${span(x.life)}. Dead: ${m[0].toLocaleString()} times that, and counting.`]},
+  {id:'burst', score:9, test:x=> x.n>=5 && x.life < 3*H && x.life > 0 && [1],
+   lines:[x=>`${x.n} commits in ${span(x.life)}. One every ${span(x.life/(x.n-1))}. Then none, ever.`]},
+  // ---- when it happened ----
+  {id:'newyear', score:9, test:x=>{ const d = x.born.date.slice(5,10); return (d==='01-01'||d==='12-31') && [d]; },
+   lines:[x=>`Started on New Year's. A resolution. It lasted ${span(x.life)}.`]},
+  {id:'valentine', score:8, test:x=> x.born.date.slice(5,10)==='02-14' && [1], lines:[x=>`Started on Valentine's Day. It lasted ${span(x.life)}.`]},
+  {id:'weekend', score:7, test:x=>{ const a = localDay(x.born.date).getUTCDay(), b = localDay(x.died.date).getUTCDay(); return !clock(x.born.date).utc && x.life < 3*D && x.n>=3 && (a===6||a===0) && (b===6||b===0) && [a,b]; },
+   lines:[(x,m)=> m[0]===m[1] ? `Born and buried on the same ${DAYS[m[0]]}. A weekend project, to the letter.` : `Born on a ${DAYS[m[0]]}, dead by ${DAYS[m[1]]}. A weekend project, to the letter.`]},
+  // ---- the body ----
+  {id:'fewfiles', score:5, test:x=> x.r.files<=2 && x.r.readme_words>0 && [x.r.files], lines:[(x,m)=>`The body: ${plural(m[0],'file')}. One of them is the README.`]},
+];
+
+function runLib(r, cs, ctx){
+  const x = {r, cs, ...ctx, files: r.files};
+  const first2 = readmeLines(r).slice(0,2).join(' ');
+  const src = { claim: [r.desc, first2].join('\n'), title: [r.name, words(r.name), r.desc, readmeLines(r)[0]||''].join('\n'), head: [words(r.name), readmeLines(r)[0]||''].join('\n'), readme: r.readme_head, name: r.name };
+  const out = [];
+  for (const rule of LIB) {
+    const m = rule.test ? rule.test(x) : (src[rule.on].match(rule.re));
+    if (!m) continue;
+    const line = rule.lines[hash(r.name + rule.id) % rule.lines.length];
+    out.push({id: rule.id, text: line(x, m), score: rule.score});
+  }
+  // every repo gets at least its own opening line held up against how it ended
+  const op = opener(r);
+  const english = new Set((op.toLowerCase().match(/\b(the|and|to|of|is|for|with|your|this|that|you|it|on|in|my|an)\b/g)||[])).size >= 2 && !/[\u0400-\u04ff\u0600-\u06ff\u3040-\u30ff\u4e00-\u9fff\uac00-\ud7af]/.test(op);
+  if (op && op.length > 12 && english && !out.some(o => o.text.includes(q(op))))
+    out.push({id:'opener', text: x.n > 1 && x.life >= 7*D && x.life < 60*D ? `Its README opens: ${q(op)}. It lasted ${span(x.life)}.` : `Its README opens: ${q(op)}. Nobody has touched it in ${span(x.quiet)}.`, score: 2});
+  return out;
+}
+
+function analyze(repo, owner){
+  const cs = repo.commits.map(c => ({...c, t: Date.parse(c.date)})).sort((a,b)=>a.t-b.t);
+  const born = cs[0], died = cs[cs.length-1], life = died.t - born.t, quiet = NOW - died.t;
+  const clues = []; const add = (text, score) => clues.push({text, score});
+  const n = cs.length;
+  // how long it lived
+  if (n === 1) add(`One commit: ${q(born.msg)}. It was also the last.`, 9);
+  else if (life < H) add(`The victim lived ${span(life)}.`, 9);
+  else if (life < D) add(`The victim lived ${span(life)}.`, 7);
+  else if (life < 7*D) add(`The victim lived ${span(life)}.`, 5);
+  else if (n <= 6 && life > 60*D && !(n>=2 && died.t - cs[n-2].t > 90*D)) add(`${n} commits in ${span(life)}. A pulse every ${span(life/(n-1))}.`, 4);
+  // "first commit", again and again
+  const firsts = cs.filter(c => FIRST.test(c.msg.trim())).length;
+  if (firsts >= 2 && firsts === n) add(`All ${n} of its commits are called “first commit.” It never made a second.`, 11);
+  else if (firsts >= 2 && firsts/n >= .5) add(`${firsts} of its ${n} commits are called “first commit.” It never made a second.`, 11);
+  else if (firsts >= 2) add(`It had ${firsts} different “first commits.” It kept starting over.`, 6);
+  // the same message, repeated
+  const groups = {}; cs.forEach(c => { if(!/^(merge|update readme|add files via upload)/i.test(c.msg) && !FIRST.test(c.msg.trim())) (groups[c.msg]=groups[c.msg]||[]).push(c); });
+  const rep = Object.values(groups).sort((a,b)=>b.length-a.length)[0];
+  if (rep && rep.length >= 2) {
+    const gap = rep[rep.length-1].t - rep[0].t;
+    add(`It said ${q(rep[0].msg)} ${rep.length} times${gap < 2*H ? ' in ' + span(gap) : ''}.`, 6 + rep.length);
+  }
+  // fix after fix
+  const fixes = cs.filter(c => /\bfix/i.test(c.msg)).length;
+  if (n >= 6 && fixes/n >= .5) add(`${n} commits. ${fixes} of them say “fix.” The patient was never stable.`, 8);
+  // README vs everything else
+  if (repo.readme_words > 50 && repo.code_words === 0) add(`${repo.readme_words.toLocaleString()} words of README. Zero lines of code.`, 11);
+  else if (repo.readme_words > repo.code_words && repo.code_words > 0) add(`The README is ${repo.readme_words.toLocaleString()} words. Everything else combined: ${repo.code_words.toLocaleString()}.`, 11);
+  // README born first
+  if (n >= 2 && repo.first_files.length && repo.first_files.every(f => READMEISH.test(f.split('/').pop()))) {
+    const g = cs[1].t - born.t; if (g >= 2*D) add(`The README was born ${span(g)} before the code.`, 8);
+  }
+  // long silence, one last word
+  if (n >= 2) {
+    const g = died.t - cs[n-2].t;
+    if (/readme/i.test(died.msg) && g > 30*D) add(`Silent for ${span(g)}. Its final act was editing its own README. It wrote its own obituary.`, 9);
+    else if (g > 90*D) add(`Silent for ${span(g)}. Then one last commit. Then nothing.`, 6);
+  }
+  // nobody came
+  if (repo.has_contributing && repo.authors.length === 1) add(`It had a contributing guide. It never had a contributor.`, 7);
+  // the big keyword library
+  for (const c of runLib(repo, cs, {n, life, quiet, born, died})) add(c.text, c.score);
+  // stars
+  if (repo.stars === 0) add(`0 stars. Not even from its creator.`, 3);
+  else if (repo.stars === 1) add(`One star. Suspicious.`, 3);
+  // motive: what the owner did instead
+  let ruling = null;
+  if (owner) {
+    const others = owner.repos.filter(r => r.name !== repo.name);
+    let best = null;
+    for (const o of others) {
+      const ts = o.commits.map(c => Date.parse(c.date));
+      const after = ts.filter(t => t > died.t && t <= died.t + D).length;
+      const before = ts.filter(t => t < born.t && t >= born.t - D).length;
+      if (after >= 10 && after >= 3*Math.max(before,1) && (!best || after > best.after)) best = {o, after, before};
+    }
+    if (best) {
+      add(`In the 24 hours after the death, the suspect made ${best.after} commits to ${best.o.name}. The day before: ${best.before}.`, 10);
+      const older = Date.parse(best.o.created) < Date.parse(repo.created);
+      ruling = older ? `Killed by its older sibling, ${best.o.name}.` : `Replaced by ${best.o.name}.`;
+    } else {
+      const younger = others.filter(o => { const c = Date.parse(o.created); return c > died.t && c - died.t < 14*D; })[0];
+      if (younger) { add(`Cause of death: ${younger.name}, born ${span(Date.parse(younger.created) - died.t)} later.`, 9); ruling = `Replaced by a shinier idea.`; }
+    }
+  }
+  if (/^cold-case$/i.test(repo.name) && owner && /^connabyss$/i.test(owner.user || '')) {
+    add(`The detective has seen this one before. It's this website.`, 99);
+    ruling = `Ruled: the unit investigated itself and found itself guilty.`;
+  }
+  if (!ruling) ruling = life < D ? `Ruled: “I'll finish it tomorrow.”` : /readme/i.test(died.msg) ? `Ruled: death by documentation.` : fixes/n >= .5 ? `Ruled: complications from too many fixes.` : `Ruled: natural causes. Nobody came back.`;
+  clues.sort((a,b)=>b.score-a.score);
+  if (repo.breathing) return {repo, born, died, life, quiet, all: [], clues: [], ruling: '', dead: false};
+  return {repo, born, died, life, quiet, all: clues, clues: clues.slice(0,5), ruling, dead: quiet > 30*D || (quiet > 3*D && life < 2*D)};
+}
+
+// ===== Witnesses, funerals, the profile, the detective, the court =====
+// Every line below is triggered by a real fact; nothing is invented about the person.
+
+// One witness per case: the files at the scene give a statement.
+function witness(c, all){
+  const r = c.repo, w = r.w || {}, out = [];
+  const say = (who, text, score) => out.push({who, text, score});
+  if (w.gitignore === false && w.n_files > 3) say('.gitignore', `Missing. Nothing was ever ignored, except the project.`, 9);
+  if (w.todos >= 2) say('The TODO notes', `There are ${w.todos} of them in the code. They are all still to do.`, 9);
+  if (w.todos === 1) say('The TODO note', `There is one, in the code. It is still to do.`, 7);
+  if (w.license && r.stars === 0 && r.forks === 0) say(w.license.split('/').pop(), `It gave everyone on Earth permission to use this. Nobody did.`, 9);
+  if (w.deps >= 3) say('The dependency list', `It names ${w.deps} packages. None of them came to the funeral.`, 8);
+  if (w.empty_files && w.empty_files.length) say(w.empty_files[0].split('/').pop(), `0 bytes. It never said a word.`, 8);
+  if (w.ds_store) say('.DS_Store', `It came over from a Mac. It has no idea what happened.`, 8);
+  if (w.tests === 0 && r.code_words > 200) say('The tests', `There were none. Nobody was there to notice it stop.`, 6);
+  if (w.biggest && w.biggest[0] >= 150) say(w.biggest[1].split('/').pop(), `The biggest file, ${w.biggest[0].toLocaleString()} lines. It carried the whole thing alone.`, 5);
+  if (w.gitignore) say('.gitignore', `It saw everything. It was told to ignore it.`, 4);
+  if (w.license) say(w.license.split('/').pop(), `Declined to comment.`, 3);
+  say('README', `Still standing at the scene. It keeps telling people what the project does.`, 1);
+  out.sort((a,b)=>b.score-a.score);
+  return all ? out : out[0];
+}
+
+// One funeral line per case.
+function funerals(c){
+  const r = c.repo, f = r.forks, s = r.stars;
+  if (f >= 2) return [`Survived by ${f} forks. In lieu of flowers, the family asks for stars.`, `Survived by ${f} forks, none of whom have called.`];
+  if (f === 1) return [`Survived by one fork, who has not been seen since.`, `One fork survives it. It doesn't talk about what happened.`];
+  if (s >= 2) return [`${s} people starred it. None came to the service.`, `${s} stars on the headstone. No visitors.`];
+  return [`No survivors. Not even a fork.`, `The service was small. Nobody came.`, `Buried in an unmarked repo.`, s === 0 ? `No flowers. No forks. No stars.` : `One star. One mourner. Probably the owner.`];
+}
+function funeral(c){ const v = funerals(c); return v[hash(c.repo.name + 'fun') % v.length]; }
+
+// Page-level variety: the same joke twice in a row stops being a joke.
+const ckey = t => t.replace(/<[^>]+>/g,'').replace(/“[^”]*”/g,'Q').replace(/\d[\d:,.]*\s?(AM|PM)?/g,'#').slice(0,22);
+function vary(cases){
+  const seen = {}, wseen = {}, fseen = {};
+  for (const c of cases) {
+    if (c.all) {
+      let pool = c.all.map(x => ({...x, adj: x.score - 5*(seen[ckey(x.text)]||0)}));
+      const fresh = pool.filter(x => (seen[ckey(x.text)]||0) < 2); if (fresh.length >= 2) pool = fresh;
+      const lifeTxt = span(c.life);
+      if (pool.some(x => !x.text.startsWith('The victim lived') && x.text.includes(lifeTxt))) pool = pool.filter(x => !x.text.startsWith('The victim lived'));
+      const picked = pool.sort((a,b)=>b.adj-a.adj).slice(0,4);
+      picked.sort((a,b)=>b.score-a.score); c.clues = picked;
+      picked.forEach(x => seen[ckey(x.text)] = (seen[ckey(x.text)]||0) + 1);
+    }
+    const ws = witness(c, true).map(w => ({...w, adj: w.score - 6*(wseen[ckey(w.text)]||0)})).sort((a,b)=>b.adj-a.adj);
+    c.wit = ws[0]; const wk = ckey(c.wit.text); wseen[wk] = (wseen[wk]||0) + 1;
+    const fs = funerals(c), start = hash(c.repo.name + 'fun') % fs.length;
+    const rot = fs.map((_,i)=>fs[(start+i)%fs.length]);
+    c.fun = rot.find(t => !fseen[ckey(t)]) || rot[0]; fseen[ckey(c.fun)] = 1;
+    if (fs.every(t => fseen[ckey(t)])) fs.forEach(t => delete fseen[ckey(t)]);
+  }
+}
+
+// The serial-killer profile: patterns across every dead project of one owner.
+function profile(dead){
+  const k = dead.length; if (!k) return [];
+  const mo = [];
+  const lives = dead.map(c=>c.life).sort((a,b)=>a-b), med = lives[Math.floor(k/2)];
+  const days = dead.filter(c => !clock(c.born.date).utc).map(c => localDay(c.born.date).getUTCDay());
+  const dayTop = [0,1,2,3,4,5,6].map(d=>[d, days.filter(x=>x===d).length]).sort((a,b)=>b[1]-a[1])[0];
+  const hours = dead.map(c => clock(c.born.date)).filter(x=>!x.utc).map(x=>x.hour);
+  const nightK = hours.filter(h => h >= 21 || h < 5).length;
+  const firsts = dead.filter(c => c.repo.commits.some(x => FIRST.test(x.msg.trim()))).length;
+  const noTests = dead.filter(c => c.repo.w && c.repo.w.tests === 0).length;
+  const readmeLast = dead.filter(c => /readme/i.test(c.died.msg)).length;
+  const lasts = {}; dead.forEach(c => { lasts[c.died.msg] = (lasts[c.died.msg]||0)+1; });
+  const sig = Object.entries(lasts).sort((a,b)=>b[1]-a[1])[0];
+  const one = k === 1;
+  if (one) mo.push(`First known victim. Lived ${span(med)}.`);
+  else mo.push(`Victims usually last ${span(med)}.`);
+  if (!one && dayTop[1] >= 2 && dayTop[1]/k >= .4) mo.push(`Strikes on ${DAYS[dayTop[0]]}s. ${dayTop[1]} of ${k} victims were born on one.`);
+  if (!one && sig && sig[1] >= 2) mo.push(`Signature: the last words are usually ${q(sig[0])}.`);
+  else if (readmeLast/k >= .5) mo.push(one ? `Left a README edit as its last act.` : `Always finishes by editing the README. Then leaves.`);
+  if (!one && firsts/k >= .6) mo.push(`Always says “first commit.” Rarely says a second.`);
+  if (noTests === k && k >= 2) mo.push(`Never leaves tests behind. No witnesses.`);
+  const abandoned = dead.reduce((s,c)=>s+c.repo.commits.length,0);
+  mo.push(`Total commits left at the scenes: ${abandoned.toLocaleString()}.`);
+  return mo.slice(0,5);
+}
+
+// The detective's thoughts: at most two per page, each triggered by a fact.
+function thoughts(dead){
+  const out = [];
+  const sat = dead.find(c => [0,6].includes(localDay(c.born.date).getUTCDay()));
+  const night = dead.find(c => { const k = clock(c.born.date); return !k.utc && (k.hour >= 23 || k.hour < 4); });
+  const fast = dead.find(c => c.life < H && c.repo.commits.length > 1);
+  if (fast) out.push({at: dead.indexOf(fast), text: `${span(fast.life)}. I've had coffee go cold slower than that.`});
+  const wk = dead.filter(c => [0,6].includes(localDay(c.born.date).getUTCDay())).length;
+  if (sat && (dead.length === 1 || wk/dead.length >= .5) && out.length < 2 && !out.some(o=>o.at===dead.indexOf(sat))) out.push({at: dead.indexOf(sat), text: `It was a ${DAYS[localDay(sat.born.date).getUTCDay()]}. They always start on a weekend.`});
+  if (out.length < 2 && dead.length >= 3) out.push({at: dead.length-1, text: `${dead.length} files on my desk. Same handwriting on every one.`});
+  return out.slice(0,2);
+}
+
+// ===== Sound: all made in the browser, no files. Starts on the first click; one button mutes it. =====
+const SFX = (() => {
+  let ctx = null, master = null, rain = null, on = true;
+  try { on = localStorage.getItem('ccu-sound') !== 'off'; } catch(e) {}
+  const noiseBuf = () => { const b = ctx.createBuffer(1, ctx.sampleRate*2, ctx.sampleRate), d = b.getChannelData(0); for (let i=0;i<d.length;i++) d[i] = Math.random()*2-1; return b; };
+  let NB;
+  function start(){
+    if (ctx || !on) return;
+    const AC = window.AudioContext || window.webkitAudioContext; if (!AC) return;
+    ctx = new AC(); master = ctx.createGain(); master.gain.value = .55; master.connect(ctx.destination); NB = noiseBuf();
+    // rain: soft filtered noise, always under everything
+    const src = ctx.createBufferSource(); src.buffer = NB; src.loop = true;
+    const f = ctx.createBiquadFilter(); f.type = 'bandpass'; f.frequency.value = 1400; f.Q.value = .4;
+    rain = ctx.createGain(); rain.gain.value = 0; src.connect(f).connect(rain).connect(master); src.start();
+    rain.gain.linearRampToValueAtTime(.05, ctx.currentTime + 2);
+    sting();
+  }
+  const ok = () => ctx && on;
+  function burst(dur, freq, q, vol, type='bandpass'){
+    const s = ctx.createBufferSource(); s.buffer = NB; const f = ctx.createBiquadFilter(); f.type = type; f.frequency.value = freq; f.Q.value = q;
+    const g = ctx.createGain(), t = ctx.currentTime; g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(.001, t + dur);
+    s.connect(f).connect(g).connect(master); s.start(t, Math.random()); s.stop(t + dur + .02);
+  }
+  function key(){ if (!ok()) return; burst(.035, 2500 + Math.random()*1500, 6, .35); }
+  function ding(){ if (!ok()) return; const o = ctx.createOscillator(), g = ctx.createGain(), t = ctx.currentTime; o.frequency.value = 2093; o.type='sine'; g.gain.setValueAtTime(.12,t); g.gain.exponentialRampToValueAtTime(.001,t+.6); o.connect(g).connect(master); o.start(t); o.stop(t+.62); }
+  function thud(){ if (!ok()) return;
+    const o = ctx.createOscillator(), g = ctx.createGain(), t = ctx.currentTime;
+    o.type = 'sine'; o.frequency.setValueAtTime(140, t); o.frequency.exponentialRampToValueAtTime(38, t + .25);
+    g.gain.setValueAtTime(.9, t); g.gain.exponentialRampToValueAtTime(.001, t + .35); o.connect(g).connect(master); o.start(t); o.stop(t + .36);
+    burst(.12, 600, .7, .6, 'lowpass'); }
+  function rip(){ if (!ok()) return;
+    const s = ctx.createBufferSource(); s.buffer = NB; const f = ctx.createBiquadFilter(); f.type = 'bandpass'; f.Q.value = 2;
+    const g = ctx.createGain(), t = ctx.currentTime; f.frequency.setValueAtTime(400, t); f.frequency.exponentialRampToValueAtTime(3200, t + .45);
+    g.gain.setValueAtTime(.0001, t); g.gain.exponentialRampToValueAtTime(.5, t + .05); g.gain.exponentialRampToValueAtTime(.001, t + .5);
+    s.connect(f).connect(g).connect(master); s.start(t); s.stop(t + .52); }
+  function swish(){ if (!ok()) return; burst(.22, 900, .5, .25, 'lowpass'); }
+  // a low minor-ninth chord swelling in, like a muted horn section in a noir film
+  function sting(){ if (!ok()) return;
+    const t = ctx.currentTime, lp = ctx.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 900; lp.connect(master);
+    [98, 116.5, 146.8, 185, 233].forEach((hz, i) => { const o = ctx.createOscillator(), g = ctx.createGain(); o.type = 'sawtooth'; o.frequency.value = hz; o.detune.value = (i%2?7:-7);
+      g.gain.setValueAtTime(.0001, t); g.gain.exponentialRampToValueAtTime(.05, t + .5 + i*.08); g.gain.exponentialRampToValueAtTime(.0001, t + 3.2);
+      o.connect(g).connect(lp); o.start(t); o.stop(t + 3.3); }); }
+  function setOn(v){ on = v; try { localStorage.setItem('ccu-sound', v ? 'on' : 'off'); } catch(e) {}
+    if (!v && ctx) { ctx.close(); ctx = null; } else if (v) start(); }
+  return {start, key, ding, thud, rip, swish, sting, setOn, get on(){ return on; }};
+})();
+document.addEventListener('pointerdown', () => SFX.start(), {once:true});
+document.addEventListener('keydown', () => SFX.start(), {once:true});
+
+// ===== Share card: the owner's stamped WANTED poster as a 1200x630 image =====
+async function shareCard(s, name, dead, alive, mo){
+  try { await Promise.all(['900 80px "Big Shoulders Stencil Display"','400 20px "Courier Prime"','700 20px "Courier Prime"'].map(f => document.fonts.load(f))); } catch(e) {}
+  const W = 1200, Hh = 630, cv = document.createElement('canvas'); cv.width = W*2; cv.height = Hh*2;
+  const g = cv.getContext('2d'); g.scale(2,2);
+  const DISP = '"Big Shoulders Stencil Display", Impact, sans-serif', TYPE = '"Courier Prime", "Courier New", monospace';
+  g.fillStyle = '#0d0f14'; g.fillRect(0,0,W,Hh);
+  // tape across the top
+  g.save(); g.translate(0,34); g.rotate(-.012); g.fillStyle = '#e8c23a'; g.fillRect(-20,0,W+40,34);
+  g.fillStyle = '#111'; g.font = `900 18px ${DISP}`; g.textBaseline = 'middle';
+  let tx = 10; while (tx < W) { g.fillText('CRIME SCENE · DO NOT CROSS ·', tx, 18); tx += 300; } g.restore();
+  // poster
+  const px = 60, py = 92, pw = W-120, ph = Hh-130;
+  g.fillStyle = '#dccca5'; g.fillRect(px,py,pw,ph); g.strokeStyle = '#2a2118'; g.lineWidth = 3; g.strokeRect(px+10,py+10,pw-20,ph-20);
+  g.fillStyle = '#2a2118'; g.textAlign = 'center'; g.textBaseline = 'alphabetic';
+  g.font = `900 92px ${DISP}`; g.fillText('WANTED', W/2, py+100);
+  g.font = `700 18px ${DISP}`; g.fillText('F O R   Q U E S T I O N I N G', W/2, py+126);
+  g.fillRect(px+30, py+140, pw-60, 3);
+  // mugshot
+  const mx = px+40, my = py+165, ms = 200;
+  if (s.avatar) { const img = new Image(); img.crossOrigin = 'anonymous'; img.src = s.avatar; await img.decode().catch(()=>{});
+    g.save(); g.filter = 'grayscale(1) contrast(1.15)'; g.drawImage(img, mx, my, ms, ms); g.restore(); }
+  else { g.fillStyle = '#c6b48a'; g.fillRect(mx,my,ms,ms); g.fillStyle = '#6b5a40'; g.font = `900 120px ${DISP}`; g.fillText('?', mx+ms/2, my+150); }
+  g.strokeStyle = '#2a2118'; g.lineWidth = 4; g.strokeRect(mx,my,ms,ms);
+  g.fillStyle = '#2a2118'; g.fillRect(mx, my+ms+8, ms, 28); g.fillStyle = '#dccca5'; g.font = `700 16px ${TYPE}`; g.fillText(name.toUpperCase(), mx+ms/2, my+ms+28);
+  // count + M.O.
+  const cx = mx+ms+40; g.textAlign = 'left';
+  g.fillStyle = '#6b5a40'; g.font = `400 14px ${TYPE}`; g.fillText('IN CONNECTION WITH', cx, my+14);
+  g.fillStyle = '#a8261d'; g.font = `900 110px ${DISP}`; g.fillText(String(dead.length), cx, my+118);
+  g.fillStyle = '#6b5a40'; g.font = `400 14px ${TYPE}`; g.fillText(`PROJECT DEATH${dead.length===1?'':'S'} · ${alive.length} STILL BREATHING`, cx, my+142);
+  g.fillStyle = '#2a2118'; g.font = `400 19px ${TYPE}`;
+  mo.slice(0,3).forEach((line, i) => { let t = line; while (g.measureText(t).width > pw-(cx-px)-60 && t.length > 10) t = t.slice(0,-2); if (t !== line) t = t.trimEnd() + '…'; g.fillText(t, cx, my+180+i*30); });
+  // stamps that are on the live poster right now
+  const stamp = (word, x, y, rot, size) => { g.save(); g.translate(x,y); g.rotate(rot); g.globalAlpha = .88; g.strokeStyle = g.fillStyle = '#a8261d';
+    g.font = `900 ${size}px ${DISP}`; g.textAlign = 'center'; g.textBaseline = 'middle'; const w = g.measureText(word).width + size*.5;
+    g.lineWidth = Math.max(4, size/14); g.strokeRect(-w/2, -size*.62, w, size*1.2); g.fillText(word, 0, 2); g.restore(); };
+  const live = [...document.querySelectorAll('.poster .bigstamp')].map(e => e.textContent);
+  stamp(document.querySelector('.poster .stamp')?.textContent || 'PERSON OF INTEREST', px+pw-190, py+ph-55, .14, 34);
+  if (live.includes('GUILTY')) stamp('GUILTY', W/2+60, py+250, -.2, 120);
+  if (live.includes('IN DENIAL')) stamp('IN DENIAL', px+pw-170, py+110, .16, 46);
+  if (live.includes('NO PAROLE')) stamp('NO PAROLE', px+260, py+ph-70, -.07, 46);
+  g.fillStyle = '#8a8778'; g.font = `400 14px ${TYPE}`; g.textAlign = 'center';
+  g.fillText('COLD CASE UNIT · Somebody killed all these projects. The commit log says it was you.', W/2, Hh-14);
+  return cv.toDataURL('image/png');
+}
+function showCard(url, name){
+  document.getElementById('cardbox')?.remove();
+  document.body.insertAdjacentHTML('beforeend', `<div id="cardbox" class="cardbox" role="dialog" aria-label="Your wanted poster">
+    <div class="cardinner"><img src="${url}" alt="Wanted poster for ${esc(name)}">
+    <div class="cardrow">${LIVE ? `<a class="btnlink" href="${url}" download="wanted-${esc(name)}.png">SAVE IMAGE</a>` : ''}
+    <span>${LIVE ? 'Or right' : 'Right'}-click / long-press the picture to save it.</span><button class="ghost" id="cardclose">Close</button></div></div></div>`);
+  const box = document.getElementById('cardbox');
+  document.getElementById('cardclose').onclick = () => box.remove();
+  box.onclick = e => { if (e.target === box) box.remove(); };
+}
+
+// ===== Live lookup: builds a suspect file straight from GitHub's public API, in the visitor's browser =====
+// Budget: GitHub allows 60 API calls an hour per visitor. One suspect costs about 2 + 2 per project (max 12 projects).
+// README and package files come from raw.githubusercontent.com, which doesn't count against that.
+const GH = 'https://api.github.com';
+const TEXT_EXT = /\.(py|js|ts|tsx|jsx|go|rs|java|kt|c|h|cpp|cs|rb|php|swift|gd|lua|sh|html|css|vue|svelte|dart|scala|m|r|jl|txt|json|ya?ml|toml|ipynb|sql)$/i;
+const CODE_EXT = /\.(py|js|ts|tsx|jsx|go|rs|java|kt|c|cpp|cs|rb|php|gd|lua|dart|vue|svelte|swift|html|css)$/i;
+class Busy extends Error {}
+async function gh(path){
+  const r = await fetch(GH + path, {headers: {Accept: 'application/vnd.github+json'}});
+  if (r.status === 403 || r.status === 429) { const reset = +r.headers.get('x-ratelimit-reset') * 1000; throw new Busy(reset ? new Date(reset).toLocaleTimeString([], {hour:'numeric', minute:'2-digit'}) : 'later'); }
+  if (r.status === 404) return null;
+  if (r.status === 409) return []; // empty repository
+  if (!r.ok) throw new Error('GitHub said ' + r.status);
+  return {json: await r.json(), link: r.headers.get('link') || ''};
+}
+async function raw(owner, repo, ref, path){
+  try { const r = await fetch(`https://raw.githubusercontent.com/${owner}/${repo}/${encodeURIComponent(ref)}/${path.split('/').map(encodeURIComponent).join('/')}`); return r.ok ? await r.text() : ''; } catch(e) { return ''; }
+}
+async function loadRepo(owner, m){
+  if (Date.now() - Date.parse(m.pushed_at) < 3*D) {
+    // still breathing: one call for the newest commit and the commit count is enough
+    const one = await gh(`/repos/${owner}/${m.name}/commits?per_page=1`);
+    if (!one || !one.json.length) return null;
+    const x = one.json[0], total = +(one.link.match(/[?&]page=(\d+)>; rel="last"/) || [0,1])[1];
+    return {name: m.name, desc: m.description || '', created: m.created_at, pushed: m.pushed_at, stars: m.stargazers_count, forks: m.forks_count,
+      commits: [{date: x.commit.committer.date, author: x.commit.author.name, msg: (x.commit.message||'').split('\n')[0]}], total, first_files: [], files: 0,
+      readme_words: 0, readme_head: '', code_words: 0, has_contributing: false, authors: [x.commit.author.name], w: {}, breathing: true};
+  }
+  const c = await gh(`/repos/${owner}/${m.name}/commits?per_page=100`);
+  if (!c || !c.json.length) return null;
+  let commits = c.json.map(x => ({date: x.commit.committer.date || x.commit.author.date, author: x.commit.author.name, msg: (x.commit.message || '').split('\n')[0]}));
+  let total = commits.length;
+  if (commits.length === 100) {
+    // find the very first commit: ask for one commit per page and jump to the last page
+    const one = await gh(`/repos/${owner}/${m.name}/commits?per_page=1`);
+    const last = one && +(one.link.match(/[?&]page=(\d+)>; rel="last"/) || [])[1];
+    if (last) { total = last; const f = await gh(`/repos/${owner}/${m.name}/commits?per_page=1&page=${last}`);
+      if (f && f.json[0]) { const x = f.json[0]; commits.push({date: x.commit.committer.date, author: x.commit.author.name, msg: (x.commit.message||'').split('\n')[0]}); } }
+  }
+  const t = await gh(`/repos/${owner}/${m.name}/git/trees/${encodeURIComponent(m.default_branch)}?recursive=1`);
+  const tree = t && t.json.tree ? t.json.tree.filter(x => x.type === 'blob') : [];
+  const files = tree.map(x => x.path), low = files.map(f => f.toLowerCase()), base = low.map(f => f.split('/').pop());
+  const readmePath = files.find(f => /^readme(\.\w+)?$/i.test(f));
+  const readme = readmePath ? await raw(owner, m.name, m.default_branch, readmePath) : '';
+  let codeBytes = 0; tree.forEach(x => { if (x.path !== readmePath && TEXT_EXT.test(x.path) && !/\.md$|license/i.test(x.path)) codeBytes += x.size || 0; });
+  let deps = 0;
+  const pj = files.find(f => f.split('/').pop() === 'package.json' && !f.includes('node_modules'));
+  if (pj) { try { const j = JSON.parse(await raw(owner, m.name, m.default_branch, pj)); deps = Object.keys(j.dependencies||{}).length + Object.keys(j.devDependencies||{}).length; } catch(e) {} }
+  const rq = files.find(f => f.split('/').pop() === 'requirements.txt');
+  if (rq) deps = Math.max(deps, (await raw(owner, m.name, m.default_branch, rq)).split('\n').filter(l => l.trim() && !l.startsWith('#')).length);
+  // read a few code files for TODOs and the biggest file
+  const code = tree.filter(x => CODE_EXT.test(x.path) && !/(^|\/)(vendor|dist|build|static|public|lib|libs|third_party|assets|node_modules)\/|\.min\./i.test(x.path) && x.size < 200000).sort((a,b)=>b.size-a.size).slice(0,8);
+  let todos = 0, biggest = [0, ''];
+  for (const x of code) { const s = await raw(owner, m.name, m.default_branch, x.path); todos += (s.match(/\b(TODO|FIXME|XXX|HACK)\b/g)||[]).length; const n = s.split('\n').length - 1; if (n > biggest[0]) biggest = [n, x.path]; }
+  const lic = files.find((f,i) => /^licen[cs]e/.test(base[i]));
+  return {name: m.name, desc: m.description || '', created: m.created_at, pushed: m.pushed_at, stars: m.stargazers_count, forks: m.forks_count,
+    commits, total, first_files: [], files: files.length, readme_words: readme.split(/\s+/).filter(Boolean).length, readme_head: readme.slice(0, 1500),
+    code_words: Math.round(codeBytes / 6), has_contributing: low.some(f => /(^|\/)contributing/.test(f)), authors: [...new Set(commits.map(x => x.author))],
+    w: {n_files: files.length, license: lic || null, gitignore: base.includes('.gitignore'), node_modules: low.some(f => f.includes('node_modules/')),
+      ds_store: base.filter(b => b === '.ds_store').length, tests: low.filter(f => /(^|\/)(tests?|__tests__|spec)\/|(_test|\.test|\.spec|test_)\w*\./.test(f)).length,
+      deps, todos, biggest, empty_files: tree.filter(x => x.size === 0).map(x => x.path).slice(0,3), untitled: []}};
+}
+async function loadSuspect(user, progress){
+  const key = 'ccu-file-' + user.toLowerCase();
+  try { const c = JSON.parse(localStorage.getItem(key) || 'null'); if (c && Date.now() - c.at < 6*H) return c.data; } catch(e) {}
+  const u = await gh(`/users/${encodeURIComponent(user)}`); if (!u) return null;
+  const list = await gh(`/users/${encodeURIComponent(user)}/repos?per_page=100&sort=pushed&type=owner`);
+  const metas = (list ? list.json : []).filter(m => !m.fork && !m.private && m.size > 0 && !m.archived).slice(0, 10);
+  const repos = [];
+  for (let i = 0; i < metas.length; i++) { progress && progress(i, metas.length, metas[i].name); const r = await loadRepo(user, metas[i]); if (r) repos.push(r); }
+  // the motive: the busiest project only has its last 100 commits here, so fetch its commits around each short-lived death
+  const busy = repos.slice().sort((a,b)=>b.total-a.total)[0];
+  if (busy && busy.total > busy.commits.length - 1) {
+    const victims = repos.filter(r => r !== busy).map(r => { const ts = r.commits.map(c=>Date.parse(c.date)); return {r, born: Math.min(...ts), died: Math.max(...ts)}; })
+      .filter(v => v.died - v.born < 7*D && Date.now() - v.died > 3*D).sort((a,b)=>(a.died-a.born)-(b.died-b.born)).slice(0,3);
+    for (const v of victims) {
+      const res = await gh(`/repos/${user}/${busy.name}/commits?per_page=100&since=${new Date(v.born - D).toISOString()}&until=${new Date(v.died + D).toISOString()}`).catch(()=>null);
+      if (res && res.json.length) { const seen = new Set(busy.commits.map(c=>c.date+c.msg));
+        res.json.forEach(x => { const c = {date: x.commit.committer.date, author: x.commit.author.name, msg: (x.commit.message||'').split('\n')[0]}; if (!seen.has(c.date+c.msg)) busy.commits.push(c); }); }
+    }
+  }
+  const data = {user: u.json.login, avatar: u.json.avatar_url, repos, live: true};
+  try { localStorage.setItem(key, JSON.stringify({at: Date.now(), data})); } catch(e) {}
+  return data;
+}
+
+function folder(c, i, total){
+  const title = c.repo.hidden_owner ? c.repo.label : c.repo.name;
+  const wt = c.wit || witness(c);
+  return `<article class="folder"><div class="k">Case ${i+1} of ${total}${c.repo.hidden_owner ? ' · owner withheld' : ''}</div>
+  <h3>${esc(title)}</h3>
+  <div class="meta"><div><div class="k">Born</div><div class="v">${esc(clock(c.born.date).day)}</div></div>
+  <div><div class="k">Last seen</div><div class="v">${esc(clock(onClock(c.died.date, c.born.date)).day)}</div></div>
+  <div><div class="k">Body count</div><div class="v">${(c.repo.total||c.repo.commits.length).toLocaleString()} commit${(c.repo.total||c.repo.commits.length)===1?'':'s'}</div></div></div>
+  <ol class="clues">${c.clues.map((x,j)=>`<li data-n="${j+1}">${x.text}</li>`).join('')}</ol>
+  ${wt ? `<div class="witness"><span class="k">Witness statement</span><br><b>${esc(wt.who)}:</b> ${esc(wt.text)}</div>` : ''}
+  <div class="last"><span class="k">Last words</span><br>${q(c.died.msg)}</div>
+  <div class="funeral">${esc(c.fun || funeral(c))}</div>
+  <div class="ruling">${esc(c.ruling)}</div></article>`;
+}
+
+// one case at a time, like flipping through a stack of files
+function stack(cases, label, opts={}){
+  vary(cases);
+  const th = opts.thoughts || [];
+  let at = 0, dir = 0;
+  const box = document.createElement('section'); box.className = 'stack';
+  const draw = () => {
+    const t = th.find(x => x.at === at);
+    box.innerHTML = `<div class="section-k">${label}</div>
+      ${t ? `<p class="thought">${esc(t.text)}</p>` : ''}
+      ${folder(cases[at], at, cases.length)}
+      <nav class="flip"><button class="ghost" data-go="-1" ${at===0?'disabled':''}>← Previous file</button>
+      <span>${at+1} / ${cases.length}</span>
+      <button data-go="1">${at===cases.length-1 ? (opts.court ? 'To the court →' : 'Back to the first file') : 'Next file →'}</button></nav>`;
+    play(box.querySelector('.folder'), dir);
+    box.querySelectorAll('[data-go]').forEach(b => b.onclick = () => {
+      const d = +b.dataset.go; dir = d;
+      if (d > 0 && at === cases.length-1) { if (opts.court) { box.querySelector('.folder')?.click(); opts.court(); return; } at = 0; } else at = Math.max(0, Math.min(cases.length-1, at+d));
+      draw(); box.scrollIntoView({behavior:'smooth', block:'start'});
+    });
+  };
+  draw(); return box;
+}
+
+// the theatre: slide the folder in, type each clue, then slam the ruling
+const calm = matchMedia('(prefers-reduced-motion: reduce)').matches;
+function shake(){ if (calm) return; document.body.classList.remove('shake'); void document.body.offsetWidth; document.body.classList.add('shake'); }
+function play(f, dir){
+  if (!f || calm) return;
+  f.classList.add(dir < 0 ? 'in-left' : 'in-right');
+  SFX.swish();
+  const items = [...f.querySelectorAll('.clues li')], texts = items.map(li => li.textContent);
+  const later = [...f.querySelectorAll('.witness,.last,.funeral')], rule = f.querySelector('.ruling');
+  items.forEach(li => { li.textContent = ''; li.style.visibility = 'hidden'; });
+  later.forEach(e => e.classList.add('wait')); rule.classList.add('wait');
+  let done = false, timer;
+  const finish = () => { if (done) return; done = true; clearTimeout(timer);
+    items.forEach((li,i) => { li.textContent = texts[i]; li.style.visibility = ''; });
+    later.forEach(e => e.classList.remove('wait')); rule.classList.remove('wait'); rule.classList.add('slam'); setTimeout(() => { shake(); SFX.thud(); }, 120); };
+  f.addEventListener('click', finish, {once:true});
+  let i = 0, c = 0;
+  const tick = () => {
+    if (done) return;
+    if (i >= items.length) { let k = 0; const reveal = () => { if (done) return; if (k < later.length) { later[k++].classList.remove('wait'); timer = setTimeout(reveal, 380); } else finish(); }; timer = setTimeout(reveal, 250); return; }
+    const li = items[i]; li.style.visibility = ''; c += 2; li.textContent = texts[i].slice(0, c);
+    if (c % 4 === 0) SFX.key();
+    if (c >= texts[i].length) { i++; c = 0; SFX.ding(); timer = setTimeout(tick, 420); } else timer = setTimeout(tick, 16);
+  };
+  timer = setTimeout(tick, 350);
+}
+
+function court(name, dead, alive, out){
+  let el = document.getElementById('court'); if (el) el.remove();
+  el = document.createElement('section'); el.id = 'court'; el.className = 'court';
+  el.innerHTML = `<div class="section-k">THE COURT</div><h2>${esc(name)}, how do you plead?</h2>
+    <p>${dead.length} project${dead.length===1?'':'s'}, ${dead.reduce((s,c)=>s+c.repo.commits.length,0).toLocaleString()} commits, ${dead.length===1?'one':'every one'} left behind.</p>
+    <div class="pleas"><button data-plea="guilty">GUILTY</button><button class="ghost" data-plea="tomorrow">I'LL FINISH IT TOMORROW</button></div>
+    <div id="verdict" role="status"></div>`;
+  out.appendChild(el); el.scrollIntoView({behavior:'smooth', block:'start'});
+  const v = el.querySelector('#verdict');
+  const poster = document.querySelector('.poster');
+  const st = {guilty: 0, tomorrow: 0};
+  // every plea leaves a mark on the poster, and the marks pile up
+  const stampPoster = (word, cls) => {
+    if (!poster || poster.querySelector('.' + cls)) return;
+    poster.scrollIntoView({behavior: calm ? 'auto' : 'smooth', block:'center'});
+    setTimeout(() => { poster.insertAdjacentHTML('beforeend', `<div class="bigstamp ${cls}">${word}</div>`); shake(); SFX.thud();
+      setTimeout(() => v.scrollIntoView({behavior: calm ? 'auto' : 'smooth', block:'center'}), 1500); }, calm ? 0 : 650);
+  };
+  const pick = dead.slice().sort((a,b)=>b.repo.commits.length-a.repo.commits.length)[0];
+  const pickName = esc(pick.repo.hidden_owner ? pick.repo.label : pick.repo.name);
+  el.querySelector('[data-plea="guilty"]').onclick = () => {
+    st.guilty++;
+    let line;
+    if (st.guilty > 1) line = `The court heard you the first time.`;
+    else if (st.tomorrow) line = `Plea changed to guilty after ${st.tomorrow} “tomorrow${st.tomorrow===1?'':'s'}.” The court is not surprised.`;
+    else line = `Probation ends when it compiles.`;
+    v.innerHTML = `<div class="sentence">SENTENCED: one commit to <b>${pickName}</b>.</div><p class="thought">${line}</p>`;
+    if (st.guilty === 1) stampPoster('GUILTY', 's1');
+  };
+  el.querySelector('[data-plea="tomorrow"]').onclick = () => {
+    const k = ++st.tomorrow;
+    let n = k; try { n = (+localStorage.getItem('ccu-tomorrow') || 0) + 1; localStorage.setItem('ccu-tomorrow', n); } catch(e) {}
+    document.body.classList.remove('reopen'); void document.body.offsetWidth; document.body.classList.add('reopen'); SFX.rip();
+    const lines = [`“Tomorrow.” That's what they all say.`, `You said that yesterday. It's still today.`, `Third time. The court is writing this down.`, `The court has stopped believing you.`, `The court has gone home. It'll finish this tomorrow.`];
+    let line = lines[Math.min(k, lines.length) - 1];
+    if (st.guilty && k === 1) line = `Pleaded guilty, then promised tomorrow. The court notes both.`;
+    if (st.guilty || k >= 2) stampPoster('IN DENIAL', 's2');
+    if (k >= 4) stampPoster('NO PAROLE', 's3');
+    const next = alive.slice().sort((a,b)=>Date.parse(b.repo.pushed)-Date.parse(a.repo.pushed))[0];
+    const tl = new Date(NOW.getTime() + k*D).toLocaleDateString('en-US', {month:'short', day:'numeric', timeZone:'UTC'});
+    v.innerHTML = `<p class="thought">${line}</p>` + (next ? `
+      <article class="folder pending"><div class="k">Case ${dead.length+1} · filed in advance</div><h3>${esc(next.repo.name)}</h3>
+      <div class="meta"><div><div class="k">Born</div><div class="v">${esc(clock(next.born.date).day)}</div></div>
+      <div><div class="k">Expected</div><div class="v">${tl}${k>1?` <s>${new Date(NOW.getTime() + (k-1)*D).toLocaleDateString('en-US',{month:'short',day:'numeric',timeZone:'UTC'})}</s>`:''}</div></div><div><div class="k">Status</div><div class="v">Still breathing</div></div></div>
+      <ol class="clues"><li data-n="1">Last touched ${span(NOW - Date.parse(next.repo.pushed))} ago. We'll wait.</li>
+      <li data-n="2">${next.repo.commits.length.toLocaleString()} commits so far. Every victim on this desk had a last one.</li>
+      ${k>1?`<li data-n="3">Finish date moved ${k} times. It only ever moves one way.</li>`:''}</ol>
+      <div class="ruling">Cause of death: tomorrow.</div></article>` : `<p class="thought">There's nothing left alive to finish. Bold.</p>`) +
+      `<p class="tally">Times you've said “tomorrow” here: ${n}.</p>`;
+  };
+}
+
+// two rap sheets side by side, and the court picks the worse offender
+async function compare(a, b){
+  const box = document.getElementById('cmpout'); box.innerHTML = `<p class="thought">Pulling the file on ${esc(b)}…</p>`;
+  let sb = DATA.suspects[b.toLowerCase()];
+  if (!sb && LIVE) { try { sb = await loadSuspect(b); if (sb) DATA.suspects[b.toLowerCase()] = sb; }
+    catch(e) { box.innerHTML = `<p class="thought">${e instanceof Busy ? `GitHub's hourly limit is used up. Try again around ${e.message}.` : `Couldn't reach GitHub.`}</p>`; return; } }
+  if (!sb) { box.innerHTML = `<p class="thought">No file on “${esc(b)}”.${LIVE ? '' : ' This preview only knows connabyss and the repeat offender (#suspect).'}</p>`; return; }
+  const sa = DATA.suspects[a.toLowerCase()];
+  const sum = (s, label) => { const all = s.repos.map(r => analyze(r, s)), dead = all.filter(c => c.dead);
+    const short = dead.slice().sort((x,y)=>x.life-y.life)[0];
+    return {label, s, dead, alive: all.length - dead.length, short, left: dead.reduce((t,c)=>t+c.repo.commits.length,0)}; };
+  const A = sum(sa, sa.hidden_owner ? 'Name withheld' : (sa.user || a)), Bx = sum(sb, sb.hidden_owner ? 'Name withheld' : (sb.user || b));
+  const pts = x => x.dead.length*3 + (x.short && x.short.life < D ? 2 : 0) + Math.min(5, Math.floor(x.left/50));
+  const pa = pts(A), pb = pts(Bx);
+  const card = (x, win) => `<div class="mini ${win?'worse':''}"><div class="k">Rap sheet</div><h3>${esc(x.label)}</h3>
+    <div class="count">${x.dead.length}</div><div class="k">dead · ${x.alive} still breathing</div>
+    <ul class="priors"><li>${x.short ? `Shortest victim: ${span(x.short.life)}` : 'No victims yet'}</li><li>Commits left at the scenes: ${x.left.toLocaleString()}</li></ul>
+    ${win ? '<div class="ministamp">WORSE OFFENDER</div>' : ''}</div>`;
+  let verdict;
+  if (pa === pb) verdict = `Equally guilty. The court is putting you in the same cell.`;
+  else { const w = pa > pb ? A : Bx, l = pa > pb ? Bx : A;
+    verdict = l.dead.length === 0 ? `${w.label} is the worse offender. ${l.label} has a clean record, which is suspicious in its own way.`
+      : w.short && l.short && w.short.life < l.short.life ? `${w.label} is the worse offender. Their shortest victim lasted ${span(w.short.life)}. ${l.label}'s lasted ${span(l.short.life)}.`
+      : `${w.label} is the worse offender, ${w.dead.length} bodies to ${l.dead.length}. ${l.label}, you're free to go.`; }
+  box.innerHTML = `<div class="section-k">THE LINEUP</div><div class="lineup">${card(A, pa > pb)}${card(Bx, pb > pa)}</div><p class="sentence">${esc(verdict)}</p>`;
+  box.querySelectorAll('.ministamp').forEach(() => { shake(); SFX.thud(); });
+  box.scrollIntoView({behavior: calm ? 'auto' : 'smooth', block:'start'});
+}
+let loading = false;
+async function openSuspect(name){
+  if (!name) return;
+  if (LIVE && !name.startsWith('#') && !DATA.suspects[name.toLowerCase()]) {
+    if (loading) return; loading = true;
+    const note = document.getElementById('notice');
+    note.textContent = `Pulling the file on ${name}…`;
+    try {
+      const data = await loadSuspect(name, (i, n, r) => { note.textContent = `Pulling the file on ${name}: project ${i+1} of ${n}, ${r}…`; });
+      if (!data) { note.textContent = `No GitHub user called “${name}”. Check the spelling.`; return; }
+      DATA.suspects[name.toLowerCase()] = data;
+    } catch (e) {
+      note.textContent = e instanceof Busy ? `The records room is closed: GitHub lets each visitor make 60 lookups an hour, and this one is used up. It reopens around ${e.message}.` : `Couldn't reach GitHub just now. Try again in a minute.`;
+      return;
+    } finally { loading = false; }
+    try { history.replaceState(null, '', '?u=' + encodeURIComponent(name)); } catch(e) {}
+  }
+  return render(name);
+}
+function render(name){
+  const out = document.getElementById('out'); const note = document.getElementById('notice'); note.textContent = '';
+  if (name === '#strangers') {
+    const cs = DATA.strangers.map(r => analyze(r, null));
+    out.innerHTML = ''; out.appendChild(stack(cs, `${cs.length} STRANGERS · OWNERS WITHHELD`, {thoughts: thoughts(cs)}));
+    return;
+  }
+  const s = DATA.suspects[name.toLowerCase()];
+  if (!s) { note.textContent = `No file on “${name}” in this preview. Live lookups come with the real website.`; return; }
+  if (LIVE) { try { history.replaceState(null, '', '?u=' + encodeURIComponent(s.user || name)); } catch(e) {} }
+  const shown = s.hidden_owner ? 'Name withheld' : name;
+  const all = s.repos.map(r => analyze(r, s));
+  const dead = all.filter(c => c.dead), alive = all.filter(c => !c.dead);
+  const mo = dead.length ? profile(dead) : all.length ? [`No bodies found. Suspiciously clean.`, `${all.length} public project${all.length===1?'':'s'}, all still breathing.`, `Most recent sign of life: ${span(NOW - Math.max(...all.map(c=>Date.parse(c.repo.pushed))))} ago.`, `The unit will keep an eye on this one.`] : [`No public projects. No bodies. No fingerprints.`, `Either innocent or very careful.`];
+  out.innerHTML = `<section class="rap poster" aria-label="Wanted poster">
+    <div class="wanted">WANTED <span>for questioning</span></div>
+    <div class="mug">${s.avatar ? `<img src="${s.avatar}" alt="">` : `<div class="noface">?</div>`}<div class="board">${esc(shown.toUpperCase())}</div></div>
+    <div><div class="k">In connection with</div><div class="count">${dead.length}</div><div class="k">project death${dead.length===1?'':'s'} · ${alive.length} still breathing</div>
+    <div class="k" style="margin-top:14px">Known M.O.</div>
+    <ul class="priors">${mo.map(p=>`<li>${esc(p)}</li>`).join('')}</ul></div>
+    <div class="stamp">${dead.length ? (dead.length >= 3 ? 'SERIAL OFFENDER' : 'PERSON OF INTEREST') : 'CLEAN RECORD'}</div></section>
+    ${s.hidden_owner ? '' : `<div class="sharerow"><button id="mkcard">THIS IS ME: MAKE MY POSTER</button><span>Only make your own. Stamps from the court are included.</span></div>`}`;
+  out.insertAdjacentHTML('beforeend', `<div class="social">
+    <form id="cmpform"><label class="k" for="cmpwho">Compare rap sheets with</label><div class="row"><input id="cmpwho" placeholder="a friend's username" autocomplete="off" spellcheck="false"><button class="ghost" type="submit">COMPARE</button></div></form>
+    ${LIVE && !s.hidden_owner ? `<div><span class="k">Or open a case on someone ${esc(shown)} follows</span><div class="row" id="follows"><button class="ghost" type="button" id="loadfollows">SHOW WHO</button></div></div>` : ''}
+    <div id="cmpout"></div></div>`);
+  document.getElementById('cmpform').onsubmit = async e => { e.preventDefault(); const other = document.getElementById('cmpwho').value.trim().replace(/^@/,''); if (other) compare(name, other); };
+  const lf = document.getElementById('loadfollows');
+  if (lf) lf.onclick = async () => { lf.disabled = true; lf.textContent = 'CHECKING…';
+    try { const r = await gh(`/users/${encodeURIComponent(s.user)}/following?per_page=12`); const list = r ? r.json.map(x => x.login) : [];
+      document.getElementById('follows').innerHTML = list.length ? list.map(l => `<button class="ghost" type="button" data-open="${esc(l)}">${esc(l)}</button>`).join('') : `<span class="k">Follows nobody. A lone wolf.</span>`;
+      document.querySelectorAll('#follows [data-open]').forEach(b => b.onclick = () => { document.getElementById('who').value = b.dataset.open; scrollTo({top:0, behavior:'smooth'}); openSuspect(b.dataset.open); });
+    } catch(e) { lf.disabled = false; lf.textContent = 'SHOW WHO'; document.getElementById('notice').textContent = e instanceof Busy ? `GitHub's hourly limit is used up. It reopens around ${e.message}.` : `Couldn't reach GitHub.`; } };
+  const mk = document.getElementById('mkcard');
+  if (mk) mk.onclick = async () => { mk.disabled = true; mk.textContent = 'DEVELOPING…'; SFX.thud();
+    const ex = dead[0] && dead[0].clues[0] ? ['Exhibit A: ' + dead[0].clues[0].text.replace(/<[^>]+>/g,'').replace(/&quot;/g,'"').replace(/&amp;/g,'&')] : [];
+    const url = await shareCard(s, shown, dead, alive, mo.slice(0,2).concat(ex)); mk.disabled = false; mk.textContent = 'THIS IS ME: MAKE MY POSTER'; showCard(url, shown); };
+  if (dead.length) out.appendChild(stack(dead, 'THE VICTIMS', {thoughts: thoughts(dead), court: () => court(shown, dead, alive, out)}));
+  else out.insertAdjacentHTML('beforeend', `<p class="thought">${all.length ? `${all.length} project${all.length===1?'':'s'}, all still breathing. I don't trust it.` : `Nothing here. You can't kill a project you never started.`}</p>`);
+  if (alive.length) out.insertAdjacentHTML('beforeend', `<p class="alive">Still breathing: ${alive.map(c=>`<b>${esc(c.repo.name)}</b> (last touched ${span(NOW - Date.parse(c.repo.pushed))} ago)`).join(', ')}. For now.</p>`);
+}
+document.getElementById('intake').addEventListener('submit', e => { e.preventDefault(); openSuspect(document.getElementById('who').value.trim().replace(/^@/,'')); });
+document.querySelectorAll('[data-open]').forEach(b => b.addEventListener('click', () => openSuspect(b.dataset.open)));
+{ const u = new URLSearchParams(location.search).get('u'); if (u) { document.getElementById('who').value = u; openSuspect(u); } else if (!LIVE) openSuspect('connabyss'); }
+const sndBtn = document.getElementById('snd');
+const sndDraw = () => { sndBtn.textContent = SFX.on ? '♪ Sound on' : '♪ Sound off'; sndBtn.setAttribute('aria-pressed', SFX.on); };
+sndBtn.onclick = () => { SFX.setOn(!SFX.on); sndDraw(); }; sndDraw();
+</script>
+
+</body></html>
