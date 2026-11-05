@@ -63,6 +63,14 @@ function analyze(repo, owner){
   const n = cs.length;
   // how long it lived
   if (n === 1) add(`One commit: ${q(born.msg)}. It was also the last.`, 9);
+  else if (n >= 5 && life < 3*H) {
+    // a short burst: its age and its pace on one line ("It lived 58 minutes. A commit every 10, then none, ever.")
+    const gaps = cs.slice(1).map((c,i) => c.t - cs[i].t), avg = life/(n-1), unit = t => t.split(' ').pop().replace(/s$/,'');
+    let every = span(avg); if (unit(every) === unit(span(life))) every = every.replace(/ \S+$/,'');
+    every = every.replace(/^1( \S+)?$/, m => m === '1' ? '' : m.slice(2)); // "every 1 minute" -> "every minute"
+    const exact = gaps.every(g => span(g) === span(avg));
+    add(`It lived ${span(life)}. A commit ${exact ? '' : 'about '}every${every ? ' ' + every : ' ' + unit(span(life))}, then none, ever.`, 12);
+  }
   else if (life < H) add(`The victim lived ${span(life)}.`, 9);
   else if (life < D) add(`The victim lived ${span(life)}.`, 7);
   else if (life < 7*D) add(`The victim lived ${span(life)}.`, 5);

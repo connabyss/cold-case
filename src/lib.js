@@ -19,7 +19,7 @@ const LAZY = /^(update|updates|updated|changes|change|stuff|wip|asdf+|test|testi
 const LIB = [
   // ---- what the README and description promised ----
   {id:'forever', score:10, on:'claim', re:/\b(forever|never dies?|don't stay dead|stays? alive|immortal|eternal|built to last|survives?)\b/i,
-   lines:[(x,m)=>`It promised ${q(m[0])}. It lasted ${span(x.life)}.`, (x,m)=>`${q(cap(m[0]))}, said the README. ${span(x.life)}, said the commit log.`]},
+   lines:[(x,m)=>`It promised ${q(m[0])}. It lasted ${span(x.life)}.`, (x,m)=>`${q(cap(m[0]))}, said the README. It stayed dead.`]},
   {id:'active', score:12, on:'claim', re:/(under|in) (active|heavy|constant|continuous) development|actively (maintained|developed)|regularly updated|updated (daily|weekly|regularly)|more (features )?(coming|to come)/i,
    lines:[(x,m)=>`The README says ${q(m[0])}. The last commit was ${span(x.quiet)} ago.`, (x,m)=>`${q(cap(m[0]))}. Last sign of development: ${span(x.quiet)} ago.`]},
   {id:'soon', score:8, on:'readme', re:/[^\n]*(coming soon|stay tuned|work in progress|\bwip\b|roadmap|to be continued|more to come)[^\n]*/i,
@@ -89,9 +89,7 @@ const LIB = [
   {id:'lazy', score:7, test:x=>{ const lz = x.cs.filter(c=>LAZY.test(c.msg.trim())); return x.n>=5 && lz.length/x.n>=.6 && [lz.length]; },
    lines:[(x,m)=>`${m[0]} of its ${x.total > x.n ? 'last ' + x.n : x.n} commits are one word long. It never explained itself.`]},
   {id:'deadratio', score:11, test:x=>{ const r = x.quiet / x.life; return x.n>1 && x.life >= 60e3 && r >= 50 && [Math.round(r)]; },
-   lines:[(x,m)=>`It was alive for ${span(x.life)}. It has now been dead ${m[0].toLocaleString()} times longer.`, (x,m)=>`Alive: ${span(x.life)}. Dead: ${m[0].toLocaleString()} times that, and counting.`]},
-  {id:'burst', score:9, test:x=> x.n>=5 && x.life < 3*H && x.life > 0 && [1],
-   lines:[x=>`${x.n} commits in ${span(x.life)}. One every ${span(x.life/(x.n-1))}. Then none, ever.`]},
+   lines:[(x,m)=>`It has now been dead ${m[0].toLocaleString()} times longer than it was ever alive.`, (x,m)=>`For every minute it was alive, it has now been dead ${m[0].toLocaleString()}.`]},
   // ---- when it happened ----
   {id:'newyear', score:9, test:x=>{ const d = x.born.date.slice(5,10); return (d==='01-01'||d==='12-31') && [d]; },
    lines:[x=>`Started on New Year's. A resolution. It lasted ${span(x.life)}.`]},
