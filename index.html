@@ -237,7 +237,7 @@ const LIB = [
    lines:[x=>`A personal portfolio. The person moved on ${span(x.quiet)} ago.`, x=>`It showed off its owner's work. The work stopped ${span(x.quiet)} ago.`]},
   {id:'weather', score:9, on:'title', re:/\bweather\b/i, lines:[x=>`A weather app. Current conditions: no commits for ${span(x.quiet)}.`]},
   {id:'calc', score:9, on:'title', re:/\bcalculator\b/i, lines:[x=>`A calculator. Final count: ${plural(x.total,'commit')}.`]},
-  {id:'game', score:8, on:'head', re:/\b(game|2048|tetris|snake|chess|tic[- ]?tac[- ]?toe|pong|sudoku|platformer)\b/i,
+  {id:'game', score:8, on:'head', re:/\b(game(?![- ]?(engines?|porting|ports?|tool(kit|s)?|kits?|framework|librar(y|ies)|libs?|sdk|servers?|bots?|launchers?|mods?|modding|dev(elopment)?|api|assets|emulators?|editors?|jams?|data|analytics|theory)\b)|2048|tetris|snake|chess|tic[- ]?tac[- ]?toe|pong|sudoku|platformer)\b/i,
    lines:[x=>`A game. Game over after ${plural(x.total,'commit')}.`, x=>`A game. Nobody pressed continue.`]},
   {id:'landing', score:9, on:'title', re:/\blanding[- ]page\b/i, lines:[x=>`A landing page. Nobody landed.`]},
   {id:'shop', score:5, on:'title', re:/e-?commerce|online (store|shop)|\bshop(ping)? (app|site|cart)\b/i, lines:[x=>`An online store. Closed ${span(x.quiet)} ago. No sign on the door.`]},
