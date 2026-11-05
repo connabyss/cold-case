@@ -2,16 +2,16 @@
 // Budget: GitHub allows 60 API calls an hour per visitor. One suspect costs about 2 + 2 per project (max 12 projects).
 // README and package files come from raw.githubusercontent.com, which doesn't count against that.
 const GH = 'https://api.github.com';
-const TEXT_EXT = /\.(py|js|ts|tsx|jsx|go|rs|java|kt|c|h|cpp|cs|rb|php|swift|gd|lua|sh|html|css|vue|svelte|dart|scala|m|r|jl|txt|json|ya?ml|toml|ipynb|sql)$/i;
+const TEXT_EXT = /\.(py|js|ts|tsx|jsx|go|rs|java|kt|c|h|cpp|cs|rb|php|swift|gd|lua|sh|html|css|vue|svelte|dart|scala|m|r|jl|txt|json|ya?ml|toml|ipynb|sql|mm|hpp|cc|cxx|zig|ex|exs|erl|hs|ml|fs|clj|cljs|nim|v|sv|vhdl?|asm|s|metal|glsl|hlsl|wgsl|shader|cu|cmake|pl|ps1|bat|elm|cr|hx|groovy|gradle|tf|nix|sol|proto|f90|kts|mjs|cjs|astro|coffee|vb|pas|ada|d|scss|sass|less)$/i;
 const CODE_EXT = /\.(py|js|ts|tsx|jsx|go|rs|java|kt|c|cpp|cs|rb|php|gd|lua|dart|vue|svelte|swift|html|css)$/i;
 class Busy extends Error {}
 // Sign in with GitHub: the helper (auth/worker.js) hands back a token in the address fragment.
 // It has no permissions (public data only) and stays in this browser tab.
 const AUTH_URL = 'https://cold-case-auth.connharr1230.workers.dev';
-let TOKEN = null, ME = null;
+let TOKEN = null, ME = null, JUST_SIGNED_IN = false;
 try { TOKEN = sessionStorage.getItem('ccu-token'); ME = sessionStorage.getItem('ccu-me'); } catch(e) {}
 { const m = location.hash.match(/token=([^&]+)/);
-  if (m) { TOKEN = decodeURIComponent(m[1]); try { sessionStorage.setItem('ccu-token', TOKEN); } catch(e) {}
+  if (m) { TOKEN = decodeURIComponent(m[1]); JUST_SIGNED_IN = true; try { sessionStorage.setItem('ccu-token', TOKEN); } catch(e) {}
     try { history.replaceState(null, '', location.pathname + location.search); } catch(e) {} } }
 async function whoAmI(){
   if (!TOKEN || ME) return ME;
@@ -57,8 +57,9 @@ async function loadRepo(owner, m){
   }
   const t = await gh(`/repos/${owner}/${m.name}/git/trees/${encodeURIComponent(m.default_branch)}?recursive=1`);
   const tree = t && t.json.tree ? t.json.tree.filter(x => x.type === 'blob') : [];
+  const partial = !!(t && t.json.truncated);
   const files = tree.map(x => x.path), low = files.map(f => f.toLowerCase()), base = low.map(f => f.split('/').pop());
-  const readmePath = files.find(f => /^readme(\.\w+)?$/i.test(f));
+  const readmePath = files.find(f => /^readme(\.\w+)?$/i.test(f)) || files.find(f => /^(\.github|docs)\/readme(\.\w+)?$/i.test(f));
   const readme = readmePath ? await raw(owner, m.name, m.default_branch, readmePath) : '';
   let codeBytes = 0; tree.forEach(x => { if (x.path !== readmePath && TEXT_EXT.test(x.path) && !/\.md$|license/i.test(x.path)) codeBytes += x.size || 0; });
   let deps = 0;
@@ -74,8 +75,8 @@ async function loadRepo(owner, m){
   return {name: m.name, desc: m.description || '', created: m.created_at, pushed: m.pushed_at, stars: m.stargazers_count, forks: m.forks_count,
     commits, total, first_files: [], files: files.length, readme_words: readme.split(/\s+/).filter(Boolean).length, readme_head: readme.slice(0, 1500),
     code_words: Math.round(codeBytes / 6), has_contributing: low.some(f => /(^|\/)contributing/.test(f)), authors: [...new Set(commits.map(x => x.author))],
-    w: {n_files: files.length, license: lic || null, gitignore: base.includes('.gitignore'), node_modules: low.some(f => f.includes('node_modules/')),
-      ds_store: base.filter(b => b === '.ds_store').length, tests: low.filter(f => /(^|\/)(tests?|__tests__|spec)\/|(_test|\.test|\.spec|test_)\w*\./.test(f)).length,
+    w: {partial, n_files: files.length, license: lic || null, gitignore: partial && !base.includes('.gitignore') ? null : base.includes('.gitignore'), node_modules: low.some(f => f.includes('node_modules/')),
+      ds_store: base.filter(b => b === '.ds_store').length, tests: partial ? null : files.filter(f => /(^|\/)(tests?|__tests__|specs?|testing)\/|[a-z0-9]tests\/|\.tests?\/|(_test|\.test|\.spec|_spec|test_)\w*\.\w+$|(^|[\/._-])tests?\.\w+$/i.test(f) || /[a-z0-9](Tests?|Spec)(\/|\.\w+$)/.test(f)).length,
       deps, todos, biggest, empty_files: tree.filter(x => x.size === 0).map(x => x.path).slice(0,3), untitled: []}};
 }
 // Saved lookups: the saved copy is raw GitHub facts, not the jokes, so wording fixes show at once.
@@ -121,7 +122,7 @@ async function loadSuspect(user, progress, fresh){
         res.json.forEach(x => { const c = {date: x.commit.committer.date, author: x.commit.author.name, msg: (x.commit.message||'').split('\n')[0]}; if (!seen.has(c.date+c.msg)) busy.commits.push(c); }); }
     }
   }
-  const data = {user: u.json.login, avatar: u.json.avatar_url, repos, extra, live: true, at: Date.now()};
+  const data = {user: u.json.login, type: u.json.type, avatar: u.json.avatar_url, repos, extra, live: true, at: Date.now()};
   try { localStorage.setItem(key, JSON.stringify({at: Date.now(), data})); } catch(e) {}
   return data;
 }

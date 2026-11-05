@@ -81,10 +81,10 @@ function analyze(repo, owner){
   }
   // fix after fix
   const fixes = cs.filter(c => /\bfix/i.test(c.msg)).length;
-  if (n >= 6 && fixes/n >= .5) add(`${n} commits. ${fixes} of them say “fix.” The patient was never stable.`, 8);
+  if (n >= 6 && fixes/n >= .5) add((repo.total||n) > n ? `${fixes} of its last ${n} commits say “fix.” The patient was never stable.` : `${n} commits. ${fixes} of them say “fix.” The patient was never stable.`, 8);
   // README vs everything else
   if (repo.readme_words > 50 && repo.code_words === 0) add(`${repo.readme_words.toLocaleString()} words of README. Zero lines of code.`, 11);
-  else if (repo.readme_words > repo.code_words && repo.code_words > 0) add(`The README is ${repo.readme_words.toLocaleString()} words. Everything else combined: ${repo.code_words.toLocaleString()}.`, 11);
+  else if (repo.readme_words > repo.code_words && repo.code_words > 0) add(`The README is ${repo.readme_words.toLocaleString()} words. Everything else combined: about ${repo.code_words.toLocaleString()}.`, 11);
   // README born first
   if (n >= 2 && repo.first_files.length && repo.first_files.every(f => READMEISH.test(f.split('/').pop()))) {
     const g = cs[1].t - born.t; if (g >= 2*D) add(`The README was born ${span(g)} before the code.`, 8);
@@ -96,7 +96,7 @@ function analyze(repo, owner){
     else if (g > 90*D) add(`Silent for ${span(g)}. Then one last commit. Then nothing.`, 6);
   }
   // nobody came
-  if (repo.has_contributing && repo.authors.length === 1) add(`It had a contributing guide. It never had a contributor.`, 7);
+  if (repo.has_contributing && repo.authors.length === 1 && (repo.total||n) <= n) add(`It had a contributing guide. It never had a contributor.`, 7);
   // the big keyword library
   for (const c of runLib(repo, cs, {n, total: Math.max(n, repo.total||0), life, quiet, born, died})) add(c.text, c.score);
   // stars
@@ -118,7 +118,8 @@ function analyze(repo, owner){
       const older = Date.parse(best.o.created) < Date.parse(repo.created);
       ruling = older ? `Killed by its older sibling, ${best.o.name}.` : `Replaced by ${best.o.name}.`;
     } else {
-      const younger = others.filter(o => { const c = Date.parse(o.created); return c > died.t && c - died.t < 14*D; })[0];
+      const newer = others.filter(o => { const c = Date.parse(o.created); return c > died.t && c - died.t < 14*D; });
+      const younger = owner.type !== 'Organization' && newer.length === 1 ? newer[0] : null;
       if (younger) { add(`Cause of death: ${younger.name}, born ${span(Date.parse(younger.created) - died.t)} later.`, 9); ruling = `Replaced by a shinier idea.`; }
     }
   }
@@ -383,7 +384,9 @@ function drawMe(){
   if (a) a.onclick = signIn;
   if (b) b.onclick = () => { signOut(); drawMe(); const u = new URLSearchParams(location.search).get('u'); if (u) render(u); };
 }
-if (LIVE && TOKEN) whoAmI().then(() => { drawMe(); const u = new URLSearchParams(location.search).get('u'); if (u && DATA.suspects[u.toLowerCase()]) render(u); }); else drawMe();
+if (LIVE && TOKEN) whoAmI().then(() => { drawMe(); const u = new URLSearchParams(location.search).get('u'); if (u && DATA.suspects[u.toLowerCase()]) render(u);
+  // Just signed in from the front page: open your own case. Signed in while looking at someone else: stay on them.
+  else if (!u && JUST_SIGNED_IN && ME) { document.getElementById('who').value = ME; openSuspect(ME); } }); else drawMe();
 const sndBtn = document.getElementById('snd');
 const sndDraw = () => { sndBtn.textContent = SFX.on ? '♪ Sound on' : '♪ Sound off'; sndBtn.setAttribute('aria-pressed', SFX.on); };
 sndBtn.onclick = () => { SFX.setOn(!SFX.on); sndDraw(); }; sndDraw();

@@ -5,10 +5,10 @@
 function witness(c, all){
   const r = c.repo, w = r.w || {}, out = [];
   const say = (who, text, score) => out.push({who, text, score});
-  if (w.gitignore === false && w.n_files > 3) say('.gitignore', `Missing. Nothing was ever ignored, except the project.`, 9);
+  if (w.gitignore === false && w.n_files > 3 && !w.partial) say('.gitignore', `Missing. Nothing was ever ignored, except the project.`, 9);
   if (w.todos >= 2) say('The TODO notes', `There are ${w.todos} of them in the code. They are all still to do.`, 9);
   if (w.todos === 1) say('The TODO note', `There is one, in the code. It is still to do.`, 7);
-  if (w.license && r.stars === 0 && r.forks === 0) say(w.license.split('/').pop(), `It gave everyone on Earth permission to use this. Nobody did.`, 9);
+  if (w.license && r.stars === 0 && r.forks === 0) say(w.license.split('/').pop(), `It spelled out how anyone could use this. Nobody forked it.`, 9);
   if (w.deps >= 3) say('The dependency list', `It names ${w.deps} packages. None of them came to the funeral.`, 8);
   if (w.empty_files && w.empty_files.length) say(w.empty_files[0].split('/').pop(), `0 bytes. It never said a word.`, 8);
   if (w.ds_store) say('.DS_Store', `It came over from a Mac. It has no idea what happened.`, 8);
@@ -79,7 +79,7 @@ function profile(dead){
   else if (readmeLast/k >= .5) mo.push(one ? `Left a README edit as its last act.` : `Always finishes by editing the README. Then leaves.`);
   if (!one && firsts/k >= .6) mo.push(`Always says “first commit.” Rarely says a second.`);
   if (noTests === k && k >= 2) mo.push(`Never leaves tests behind. No witnesses.`);
-  const abandoned = dead.reduce((s,c)=>s+c.repo.commits.length,0);
+  const abandoned = dead.reduce((s,c)=>s+Math.max(c.repo.total||0, c.repo.commits.length),0);
   mo.push(`Total commits left at the scenes: ${abandoned.toLocaleString()}.`);
   return mo.slice(0,5);
 }

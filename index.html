@@ -1,6 +1,18 @@
 <!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Cold Case Unit</title>
+<meta name="description" content="Somebody killed all these projects. The commit log says it was you. Type any GitHub username and get a case file on every project they walked away from.">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Cold Case Unit">
+<meta property="og:title" content="Cold Case Unit: somebody killed all these projects">
+<meta property="og:description" content="The commit log says it was you. Type any GitHub username and get a case file on every project they walked away from.">
+<meta property="og:url" content="https://connabyss.github.io/cold-case/">
+<meta property="og:image" content="https://connabyss.github.io/cold-case/og.png">
+<meta property="og:image:width" content="1280">
+<meta property="og:image:height" content="640">
+<meta property="og:image:alt" content="Crime scene tape around the words: Somebody killed all these projects. The commit log says it was you.">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="theme-color" content="#0d0f14">
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Stencil+Display:wght@700;900&family=Courier+Prime:ital,wght@0,400;0,700;1,400&display=swap">
@@ -191,6 +203,9 @@ function readmeLines(r){ return r.readme_head.split('\n').map(s=>s.replace(/^[#>
 function opener(r){ const ls = readmeLines(r).map(l=>l.replace(/\[([^\]]*)\]\([^)]*\)/g,'$1'));
   const body = ls.find((l,i)=> i>0 || ls.length===1) || ''; let s = body.split(/(?<=[.!?。])\s/)[0]||'';
   if (s.length > 120) s = s.slice(0,120).replace(/\s+\S*$/,'') + '…'; return s; }
+// A library, SDK or API about a thing is not the app or the store itself.
+const NOT_APP = /\b(sdk|api|library|lib|client|wrapper|package|plugin|module|framework|component|data ?set|bindings?)\b/i;
+const titleText = r => [r.name, words(r.name), r.desc||'', readmeLines(r)[0]||''].join('\n');
 const LAZY = /^(update|updates|updated|changes|change|stuff|wip|asdf+|test|testing|ok|\.+|minor|commit|save|done|idk|lol|-|x+|a+|new|upload|edit|edits|code|files|more)$/i;
 
 const LIB = [
@@ -217,22 +232,22 @@ const LIB = [
    lines:[(x,m)=>`It won ${m[0].toLowerCase()}. Its last commit was ${span(x.quiet)} ago.`, (x,m)=>`It won ${m[0].toLowerCase()}. Its reward: ${span(x.quiet)} alone.`]},
   {id:'paper', score:6, on:'claim', re:/official (pytorch |tensorflow )?(implementation|code)|code for (the|our) paper|code for the work presented|supplementary (data and )?code/i,
    lines:[x=>`The official code for a paper. The paper got published. The code got left.`, x=>`It existed so a paper could cite it. The citation is still alive.`]},
-  {id:'clone', score:10, on:'title', re:/([A-Za-z0-9.]+)[\s_-]?clone\b/i,
+  {id:'clone', score:10, test:x=>{ const m = [words(x.r.name), x.r.desc||''].join('\n').match(/([A-Za-z0-9.]+)[\s_-]?clone\b/i); return m && !/^(git|to|a|an|the|deep|shallow|object|objects|repo|voice|and|or|can|you|easy|quick|fast|struct|value|structured)$/i.test(m[1]) && m; },
    lines:[(x,m)=>`A ${m[1]} clone. ${m[1]} is doing fine.`, (x,m)=>`It set out to copy ${m[1]}. ${m[1]} never noticed.`]},
   {id:'todo', score:10, on:'title', re:/\bto[- ]?do (app|list)\b|\btodo ?app\b/i,
    lines:[x=>`A to-do app. Finishing it is still on someone's list.`, x=>`A to-do app with one item left: itself.`]},
-  {id:'portfolio', score:7, on:'title', re:/\bportfolio\b|personal (web)?site|personal blog/i,
+  {id:'portfolio', score:7, on:'title', re:/\b(?<!(stock|crypto|investment|asset|trading|financial|project) )portfolio\b(?! (opt|optimi[sz]ation|optimi[sz]er|management|manager|analysis|analytics|tracker|tracking|risk|theory|backtest(ing)?|rebalanc\w*|allocation))|personal (web)?site|personal blog/i,
    lines:[x=>`A personal portfolio. The person moved on ${span(x.quiet)} ago.`, x=>`It showed off its owner's work. The work stopped ${span(x.quiet)} ago.`]},
-  {id:'weather', score:9, on:'title', re:/\bweather\b/i, lines:[x=>`A weather app. Current conditions: no commits for ${span(x.quiet)}.`]},
-  {id:'calc', score:9, on:'title', re:/\bcalculator\b/i, lines:[x=>`A calculator. Final count: ${plural(x.total,'commit')}.`]},
-  {id:'game', score:8, on:'head', re:/\b(game|2048|tetris|snake|chess|tic[- ]?tac[- ]?toe|pong|sudoku|platformer)\b/i,
+  {id:'weather', score:9, on:'title', test:x=>{ const t = titleText(x.r); return !NOT_APP.test(t) && t.match(/\bweather\b/i); }, lines:[x=>`A weather app. Current conditions: no commits for ${span(x.quiet)}.`]},
+  {id:'calc', score:9, on:'title', test:x=>{ const t = titleText(x.r); return !NOT_APP.test(t) && t.match(/\bcalculator\b/i); }, lines:[x=>`A calculator. Final count: ${plural(x.total,'commit')}.`]},
+  {id:'game', score:8, on:'head', re:/\b(game(?![- ]?(engines?|porting|ports?|tool(kit|s)?|kits?|framework|librar(y|ies)|libs?|sdk|servers?|bots?|launchers?|mods?|modding|dev(elopment)?|api|assets|emulators?|editors?|jams?|data|analytics|theory)\b)|2048|tetris|snake|chess|tic[- ]?tac[- ]?toe|pong|sudoku|platformer)\b/i,
    lines:[x=>`A game. Game over after ${plural(x.total,'commit')}.`, x=>`A game. Nobody pressed continue.`]},
   {id:'landing', score:9, on:'title', re:/\blanding[- ]page\b/i, lines:[x=>`A landing page. Nobody landed.`]},
-  {id:'shop', score:5, on:'title', re:/e-?commerce|online (store|shop)|\bshop(ping)? (app|site|cart)\b/i, lines:[x=>`An online store. Closed ${span(x.quiet)} ago. No sign on the door.`]},
+  {id:'shop', score:5, on:'title', test:x=>{ const t = titleText(x.r); return !NOT_APP.test(t) && t.match(/(e-?commerce|online (store|shop)|\bshop(ping)? (app|site|cart)\b)/i); }, lines:[x=>`An online store. Closed ${span(x.quiet)} ago. No sign on the door.`]},
   {id:'bot', score:5, on:'title', re:/\b(discord|telegram|whatsapp|slack|twitter) ?bot\b/i, lines:[(x,m)=>`A ${m[1]} bot. Even the bot gave up ${span(x.quiet)} ago.`]},
   {id:'hack', score:6, on:'claim', re:/\bhackathon\b|\bgame ?jam\b/i, lines:[(x,m)=>`Built for a ${m[0].toLowerCase()}. The ${m[0].toLowerCase()} ended. So did this.`]},
-  {id:'awesome', score:7, on:'name', re:/^awesome/i, lines:[x=>`An awesome list. The last awesome thing was added ${span(x.quiet)} ago.`]},
-  {id:'learn', score:4, on:'head', re:/\b(practice|tutorial|bootcamp|homework|assignment|exercises|my first|learn(ing)? (javascript|python|react|java|c\+\+|rust|go|to code|web))\b/i,
+  {id:'awesome', score:7, test:x=> /^awesome[-_]/i.test(x.r.name) && /awesome\.re|^\s*[-*] \[[^\]]+\]\(/m.test(x.r.readme_head||'') && [1], lines:[x=>`An awesome list. The last awesome thing was added ${span(x.quiet)} ago.`]},
+  {id:'learn', score:4, on:'head', re:/\b((?<!(best|good|recommended|security|coding) )practice|bootcamp|homework|assignment|exercises|my first|learn(ing)? (javascript|python|react|java|c\+\+|rust|go|to code|web))\b/i,
    lines:[x=>`A learning project. Lesson learned in ${span(x.life)}.`, x=>`It was practice. Practice ended ${span(x.quiet)} ago.`]},
   {id:'ai', score:3, on:'title', re:/\b(ai|gpt|llm|chatbot|agentic|rag|langchain|gemini|openai)\b/i,
    lines:[x=>`It was powered by AI. Then by nobody.`, x=>`An AI project. The humans stopped committing ${span(x.quiet)} ago.`]},
@@ -323,10 +338,10 @@ function analyze(repo, owner){
   }
   // fix after fix
   const fixes = cs.filter(c => /\bfix/i.test(c.msg)).length;
-  if (n >= 6 && fixes/n >= .5) add(`${n} commits. ${fixes} of them say “fix.” The patient was never stable.`, 8);
+  if (n >= 6 && fixes/n >= .5) add((repo.total||n) > n ? `${fixes} of its last ${n} commits say “fix.” The patient was never stable.` : `${n} commits. ${fixes} of them say “fix.” The patient was never stable.`, 8);
   // README vs everything else
   if (repo.readme_words > 50 && repo.code_words === 0) add(`${repo.readme_words.toLocaleString()} words of README. Zero lines of code.`, 11);
-  else if (repo.readme_words > repo.code_words && repo.code_words > 0) add(`The README is ${repo.readme_words.toLocaleString()} words. Everything else combined: ${repo.code_words.toLocaleString()}.`, 11);
+  else if (repo.readme_words > repo.code_words && repo.code_words > 0) add(`The README is ${repo.readme_words.toLocaleString()} words. Everything else combined: about ${repo.code_words.toLocaleString()}.`, 11);
   // README born first
   if (n >= 2 && repo.first_files.length && repo.first_files.every(f => READMEISH.test(f.split('/').pop()))) {
     const g = cs[1].t - born.t; if (g >= 2*D) add(`The README was born ${span(g)} before the code.`, 8);
@@ -338,7 +353,7 @@ function analyze(repo, owner){
     else if (g > 90*D) add(`Silent for ${span(g)}. Then one last commit. Then nothing.`, 6);
   }
   // nobody came
-  if (repo.has_contributing && repo.authors.length === 1) add(`It had a contributing guide. It never had a contributor.`, 7);
+  if (repo.has_contributing && repo.authors.length === 1 && (repo.total||n) <= n) add(`It had a contributing guide. It never had a contributor.`, 7);
   // the big keyword library
   for (const c of runLib(repo, cs, {n, total: Math.max(n, repo.total||0), life, quiet, born, died})) add(c.text, c.score);
   // stars
@@ -360,7 +375,8 @@ function analyze(repo, owner){
       const older = Date.parse(best.o.created) < Date.parse(repo.created);
       ruling = older ? `Killed by its older sibling, ${best.o.name}.` : `Replaced by ${best.o.name}.`;
     } else {
-      const younger = others.filter(o => { const c = Date.parse(o.created); return c > died.t && c - died.t < 14*D; })[0];
+      const newer = others.filter(o => { const c = Date.parse(o.created); return c > died.t && c - died.t < 14*D; });
+      const younger = owner.type !== 'Organization' && newer.length === 1 ? newer[0] : null;
       if (younger) { add(`Cause of death: ${younger.name}, born ${span(Date.parse(younger.created) - died.t)} later.`, 9); ruling = `Replaced by a shinier idea.`; }
     }
   }
@@ -387,10 +403,10 @@ function analyze(repo, owner){
 function witness(c, all){
   const r = c.repo, w = r.w || {}, out = [];
   const say = (who, text, score) => out.push({who, text, score});
-  if (w.gitignore === false && w.n_files > 3) say('.gitignore', `Missing. Nothing was ever ignored, except the project.`, 9);
+  if (w.gitignore === false && w.n_files > 3 && !w.partial) say('.gitignore', `Missing. Nothing was ever ignored, except the project.`, 9);
   if (w.todos >= 2) say('The TODO notes', `There are ${w.todos} of them in the code. They are all still to do.`, 9);
   if (w.todos === 1) say('The TODO note', `There is one, in the code. It is still to do.`, 7);
-  if (w.license && r.stars === 0 && r.forks === 0) say(w.license.split('/').pop(), `It gave everyone on Earth permission to use this. Nobody did.`, 9);
+  if (w.license && r.stars === 0 && r.forks === 0) say(w.license.split('/').pop(), `It spelled out how anyone could use this. Nobody forked it.`, 9);
   if (w.deps >= 3) say('The dependency list', `It names ${w.deps} packages. None of them came to the funeral.`, 8);
   if (w.empty_files && w.empty_files.length) say(w.empty_files[0].split('/').pop(), `0 bytes. It never said a word.`, 8);
   if (w.ds_store) say('.DS_Store', `It came over from a Mac. It has no idea what happened.`, 8);
@@ -461,7 +477,7 @@ function profile(dead){
   else if (readmeLast/k >= .5) mo.push(one ? `Left a README edit as its last act.` : `Always finishes by editing the README. Then leaves.`);
   if (!one && firsts/k >= .6) mo.push(`Always says “first commit.” Rarely says a second.`);
   if (noTests === k && k >= 2) mo.push(`Never leaves tests behind. No witnesses.`);
-  const abandoned = dead.reduce((s,c)=>s+c.repo.commits.length,0);
+  const abandoned = dead.reduce((s,c)=>s+Math.max(c.repo.total||0, c.repo.commits.length),0);
   mo.push(`Total commits left at the scenes: ${abandoned.toLocaleString()}.`);
   return mo.slice(0,5);
 }
@@ -667,16 +683,16 @@ function showCard(url, name, deadN){
 // Budget: GitHub allows 60 API calls an hour per visitor. One suspect costs about 2 + 2 per project (max 12 projects).
 // README and package files come from raw.githubusercontent.com, which doesn't count against that.
 const GH = 'https://api.github.com';
-const TEXT_EXT = /\.(py|js|ts|tsx|jsx|go|rs|java|kt|c|h|cpp|cs|rb|php|swift|gd|lua|sh|html|css|vue|svelte|dart|scala|m|r|jl|txt|json|ya?ml|toml|ipynb|sql)$/i;
+const TEXT_EXT = /\.(py|js|ts|tsx|jsx|go|rs|java|kt|c|h|cpp|cs|rb|php|swift|gd|lua|sh|html|css|vue|svelte|dart|scala|m|r|jl|txt|json|ya?ml|toml|ipynb|sql|mm|hpp|cc|cxx|zig|ex|exs|erl|hs|ml|fs|clj|cljs|nim|v|sv|vhdl?|asm|s|metal|glsl|hlsl|wgsl|shader|cu|cmake|pl|ps1|bat|elm|cr|hx|groovy|gradle|tf|nix|sol|proto|f90|kts|mjs|cjs|astro|coffee|vb|pas|ada|d|scss|sass|less)$/i;
 const CODE_EXT = /\.(py|js|ts|tsx|jsx|go|rs|java|kt|c|cpp|cs|rb|php|gd|lua|dart|vue|svelte|swift|html|css)$/i;
 class Busy extends Error {}
 // Sign in with GitHub: the helper (auth/worker.js) hands back a token in the address fragment.
 // It has no permissions (public data only) and stays in this browser tab.
 const AUTH_URL = 'https://cold-case-auth.connharr1230.workers.dev';
-let TOKEN = null, ME = null;
+let TOKEN = null, ME = null, JUST_SIGNED_IN = false;
 try { TOKEN = sessionStorage.getItem('ccu-token'); ME = sessionStorage.getItem('ccu-me'); } catch(e) {}
 { const m = location.hash.match(/token=([^&]+)/);
-  if (m) { TOKEN = decodeURIComponent(m[1]); try { sessionStorage.setItem('ccu-token', TOKEN); } catch(e) {}
+  if (m) { TOKEN = decodeURIComponent(m[1]); JUST_SIGNED_IN = true; try { sessionStorage.setItem('ccu-token', TOKEN); } catch(e) {}
     try { history.replaceState(null, '', location.pathname + location.search); } catch(e) {} } }
 async function whoAmI(){
   if (!TOKEN || ME) return ME;
@@ -722,8 +738,9 @@ async function loadRepo(owner, m){
   }
   const t = await gh(`/repos/${owner}/${m.name}/git/trees/${encodeURIComponent(m.default_branch)}?recursive=1`);
   const tree = t && t.json.tree ? t.json.tree.filter(x => x.type === 'blob') : [];
+  const partial = !!(t && t.json.truncated);
   const files = tree.map(x => x.path), low = files.map(f => f.toLowerCase()), base = low.map(f => f.split('/').pop());
-  const readmePath = files.find(f => /^readme(\.\w+)?$/i.test(f));
+  const readmePath = files.find(f => /^readme(\.\w+)?$/i.test(f)) || files.find(f => /^(\.github|docs)\/readme(\.\w+)?$/i.test(f));
   const readme = readmePath ? await raw(owner, m.name, m.default_branch, readmePath) : '';
   let codeBytes = 0; tree.forEach(x => { if (x.path !== readmePath && TEXT_EXT.test(x.path) && !/\.md$|license/i.test(x.path)) codeBytes += x.size || 0; });
   let deps = 0;
@@ -739,14 +756,14 @@ async function loadRepo(owner, m){
   return {name: m.name, desc: m.description || '', created: m.created_at, pushed: m.pushed_at, stars: m.stargazers_count, forks: m.forks_count,
     commits, total, first_files: [], files: files.length, readme_words: readme.split(/\s+/).filter(Boolean).length, readme_head: readme.slice(0, 1500),
     code_words: Math.round(codeBytes / 6), has_contributing: low.some(f => /(^|\/)contributing/.test(f)), authors: [...new Set(commits.map(x => x.author))],
-    w: {n_files: files.length, license: lic || null, gitignore: base.includes('.gitignore'), node_modules: low.some(f => f.includes('node_modules/')),
-      ds_store: base.filter(b => b === '.ds_store').length, tests: low.filter(f => /(^|\/)(tests?|__tests__|spec)\/|(_test|\.test|\.spec|test_)\w*\./.test(f)).length,
+    w: {partial, n_files: files.length, license: lic || null, gitignore: partial && !base.includes('.gitignore') ? null : base.includes('.gitignore'), node_modules: low.some(f => f.includes('node_modules/')),
+      ds_store: base.filter(b => b === '.ds_store').length, tests: partial ? null : files.filter(f => /(^|\/)(tests?|__tests__|specs?|testing)\/|[a-z0-9]tests\/|\.tests?\/|(_test|\.test|\.spec|_spec|test_)\w*\.\w+$|(^|[\/._-])tests?\.\w+$/i.test(f) || /[a-z0-9](Tests?|Spec)(\/|\.\w+$)/.test(f)).length,
       deps, todos, biggest, empty_files: tree.filter(x => x.size === 0).map(x => x.path).slice(0,3), untitled: []}};
 }
 // Saved lookups: the saved copy is raw GitHub facts, not the jokes, so wording fixes show at once.
 // LOADER_VER changes whenever this loader changes (set by build.py), which retires every older copy.
 // Signed out, a copy lasts an hour (GitHub allows 60 lookups an hour); signed in, 10 minutes.
-const LOADER_VER = '365df352';
+const LOADER_VER = '2ec67766';
 try { for (let i = localStorage.length - 1; i >= 0; i--) { const k = localStorage.key(i); if (/^ccu-file-/.test(k) && !k.startsWith('ccu-file-' + LOADER_VER + '-')) localStorage.removeItem(k); } } catch(e) {}
 function cacheKey(user){ return 'ccu-file-' + LOADER_VER + '-' + user.toLowerCase(); }
 function forget(user){ try { localStorage.removeItem(cacheKey(user)); } catch(e) {} }
@@ -786,7 +803,7 @@ async function loadSuspect(user, progress, fresh){
         res.json.forEach(x => { const c = {date: x.commit.committer.date, author: x.commit.author.name, msg: (x.commit.message||'').split('\n')[0]}; if (!seen.has(c.date+c.msg)) busy.commits.push(c); }); }
     }
   }
-  const data = {user: u.json.login, avatar: u.json.avatar_url, repos, extra, live: true, at: Date.now()};
+  const data = {user: u.json.login, type: u.json.type, avatar: u.json.avatar_url, repos, extra, live: true, at: Date.now()};
   try { localStorage.setItem(key, JSON.stringify({at: Date.now(), data})); } catch(e) {}
   return data;
 }
@@ -1032,7 +1049,9 @@ function drawMe(){
   if (a) a.onclick = signIn;
   if (b) b.onclick = () => { signOut(); drawMe(); const u = new URLSearchParams(location.search).get('u'); if (u) render(u); };
 }
-if (LIVE && TOKEN) whoAmI().then(() => { drawMe(); const u = new URLSearchParams(location.search).get('u'); if (u && DATA.suspects[u.toLowerCase()]) render(u); }); else drawMe();
+if (LIVE && TOKEN) whoAmI().then(() => { drawMe(); const u = new URLSearchParams(location.search).get('u'); if (u && DATA.suspects[u.toLowerCase()]) render(u);
+  // Just signed in from the front page: open your own case. Signed in while looking at someone else: stay on them.
+  else if (!u && JUST_SIGNED_IN && ME) { document.getElementById('who').value = ME; openSuspect(ME); } }); else drawMe();
 const sndBtn = document.getElementById('snd');
 const sndDraw = () => { sndBtn.textContent = SFX.on ? '♪ Sound on' : '♪ Sound off'; sndBtn.setAttribute('aria-pressed', SFX.on); };
 sndBtn.onclick = () => { SFX.setOn(!SFX.on); sndDraw(); }; sndDraw();
