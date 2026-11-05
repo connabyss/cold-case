@@ -8,10 +8,10 @@ class Busy extends Error {}
 // Sign in with GitHub: the helper (auth/worker.js) hands back a token in the address fragment.
 // It has no permissions (public data only) and stays in this browser tab.
 const AUTH_URL = 'https://cold-case-auth.connharr1230.workers.dev';
-let TOKEN = null, ME = null;
+let TOKEN = null, ME = null, JUST_SIGNED_IN = false;
 try { TOKEN = sessionStorage.getItem('ccu-token'); ME = sessionStorage.getItem('ccu-me'); } catch(e) {}
 { const m = location.hash.match(/token=([^&]+)/);
-  if (m) { TOKEN = decodeURIComponent(m[1]); try { sessionStorage.setItem('ccu-token', TOKEN); } catch(e) {}
+  if (m) { TOKEN = decodeURIComponent(m[1]); JUST_SIGNED_IN = true; try { sessionStorage.setItem('ccu-token', TOKEN); } catch(e) {}
     try { history.replaceState(null, '', location.pathname + location.search); } catch(e) {} } }
 async function whoAmI(){
   if (!TOKEN || ME) return ME;

@@ -383,7 +383,9 @@ function drawMe(){
   if (a) a.onclick = signIn;
   if (b) b.onclick = () => { signOut(); drawMe(); const u = new URLSearchParams(location.search).get('u'); if (u) render(u); };
 }
-if (LIVE && TOKEN) whoAmI().then(() => { drawMe(); const u = new URLSearchParams(location.search).get('u'); if (u && DATA.suspects[u.toLowerCase()]) render(u); }); else drawMe();
+if (LIVE && TOKEN) whoAmI().then(() => { drawMe(); const u = new URLSearchParams(location.search).get('u'); if (u && DATA.suspects[u.toLowerCase()]) render(u);
+  // Just signed in from the front page: open your own case. Signed in while looking at someone else: stay on them.
+  else if (!u && JUST_SIGNED_IN && ME) { document.getElementById('who').value = ME; openSuspect(ME); } }); else drawMe();
 const sndBtn = document.getElementById('snd');
 const sndDraw = () => { sndBtn.textContent = SFX.on ? '♪ Sound on' : '♪ Sound off'; sndBtn.setAttribute('aria-pressed', SFX.on); };
 sndBtn.onclick = () => { SFX.setOn(!SFX.on); sndDraw(); }; sndDraw();

@@ -685,10 +685,10 @@ class Busy extends Error {}
 // Sign in with GitHub: the helper (auth/worker.js) hands back a token in the address fragment.
 // It has no permissions (public data only) and stays in this browser tab.
 const AUTH_URL = 'https://cold-case-auth.connharr1230.workers.dev';
-let TOKEN = null, ME = null;
+let TOKEN = null, ME = null, JUST_SIGNED_IN = false;
 try { TOKEN = sessionStorage.getItem('ccu-token'); ME = sessionStorage.getItem('ccu-me'); } catch(e) {}
 { const m = location.hash.match(/token=([^&]+)/);
-  if (m) { TOKEN = decodeURIComponent(m[1]); try { sessionStorage.setItem('ccu-token', TOKEN); } catch(e) {}
+  if (m) { TOKEN = decodeURIComponent(m[1]); JUST_SIGNED_IN = true; try { sessionStorage.setItem('ccu-token', TOKEN); } catch(e) {}
     try { history.replaceState(null, '', location.pathname + location.search); } catch(e) {} } }
 async function whoAmI(){
   if (!TOKEN || ME) return ME;
@@ -758,7 +758,7 @@ async function loadRepo(owner, m){
 // Saved lookups: the saved copy is raw GitHub facts, not the jokes, so wording fixes show at once.
 // LOADER_VER changes whenever this loader changes (set by build.py), which retires every older copy.
 // Signed out, a copy lasts an hour (GitHub allows 60 lookups an hour); signed in, 10 minutes.
-const LOADER_VER = '365df352';
+const LOADER_VER = '61df9ef4';
 try { for (let i = localStorage.length - 1; i >= 0; i--) { const k = localStorage.key(i); if (/^ccu-file-/.test(k) && !k.startsWith('ccu-file-' + LOADER_VER + '-')) localStorage.removeItem(k); } } catch(e) {}
 function cacheKey(user){ return 'ccu-file-' + LOADER_VER + '-' + user.toLowerCase(); }
 function forget(user){ try { localStorage.removeItem(cacheKey(user)); } catch(e) {} }
@@ -1044,7 +1044,9 @@ function drawMe(){
   if (a) a.onclick = signIn;
   if (b) b.onclick = () => { signOut(); drawMe(); const u = new URLSearchParams(location.search).get('u'); if (u) render(u); };
 }
-if (LIVE && TOKEN) whoAmI().then(() => { drawMe(); const u = new URLSearchParams(location.search).get('u'); if (u && DATA.suspects[u.toLowerCase()]) render(u); }); else drawMe();
+if (LIVE && TOKEN) whoAmI().then(() => { drawMe(); const u = new URLSearchParams(location.search).get('u'); if (u && DATA.suspects[u.toLowerCase()]) render(u);
+  // Just signed in from the front page: open your own case. Signed in while looking at someone else: stay on them.
+  else if (!u && JUST_SIGNED_IN && ME) { document.getElementById('who').value = ME; openSuspect(ME); } }); else drawMe();
 const sndBtn = document.getElementById('snd');
 const sndDraw = () => { sndBtn.textContent = SFX.on ? '♪ Sound on' : '♪ Sound off'; sndBtn.setAttribute('aria-pressed', SFX.on); };
 sndBtn.onclick = () => { SFX.setOn(!SFX.on); sndDraw(); }; sndDraw();
