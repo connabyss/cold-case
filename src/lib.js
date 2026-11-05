@@ -11,6 +11,9 @@ function readmeLines(r){ return r.readme_head.split('\n').map(s=>s.replace(/^[#>
 function opener(r){ const ls = readmeLines(r).map(l=>l.replace(/\[([^\]]*)\]\([^)]*\)/g,'$1'));
   const body = ls.find((l,i)=> i>0 || ls.length===1) || ''; let s = body.split(/(?<=[.!?。])\s/)[0]||'';
   if (s.length > 120) s = s.slice(0,120).replace(/\s+\S*$/,'') + '…'; return s; }
+// A library, SDK or API about a thing is not the app or the store itself.
+const NOT_APP = /\b(sdk|api|library|lib|client|wrapper|package|plugin|module|framework|component|data ?set|bindings?)\b/i;
+const titleText = r => [r.name, words(r.name), r.desc||'', readmeLines(r)[0]||''].join('\n');
 const LAZY = /^(update|updates|updated|changes|change|stuff|wip|asdf+|test|testing|ok|\.+|minor|commit|save|done|idk|lol|-|x+|a+|new|upload|edit|edits|code|files|more)$/i;
 
 const LIB = [
@@ -37,22 +40,22 @@ const LIB = [
    lines:[(x,m)=>`It won ${m[0].toLowerCase()}. Its last commit was ${span(x.quiet)} ago.`, (x,m)=>`It won ${m[0].toLowerCase()}. Its reward: ${span(x.quiet)} alone.`]},
   {id:'paper', score:6, on:'claim', re:/official (pytorch |tensorflow )?(implementation|code)|code for (the|our) paper|code for the work presented|supplementary (data and )?code/i,
    lines:[x=>`The official code for a paper. The paper got published. The code got left.`, x=>`It existed so a paper could cite it. The citation is still alive.`]},
-  {id:'clone', score:10, on:'title', re:/([A-Za-z0-9.]+)[\s_-]?clone\b/i,
+  {id:'clone', score:10, test:x=>{ const m = [words(x.r.name), x.r.desc||''].join('\n').match(/([A-Za-z0-9.]+)[\s_-]?clone\b/i); return m && !/^(git|to|a|an|the|deep|shallow|object|objects|repo|voice|and|or|can|you|easy|quick|fast|struct|value|structured)$/i.test(m[1]) && m; },
    lines:[(x,m)=>`A ${m[1]} clone. ${m[1]} is doing fine.`, (x,m)=>`It set out to copy ${m[1]}. ${m[1]} never noticed.`]},
   {id:'todo', score:10, on:'title', re:/\bto[- ]?do (app|list)\b|\btodo ?app\b/i,
    lines:[x=>`A to-do app. Finishing it is still on someone's list.`, x=>`A to-do app with one item left: itself.`]},
-  {id:'portfolio', score:7, on:'title', re:/\bportfolio\b|personal (web)?site|personal blog/i,
+  {id:'portfolio', score:7, on:'title', re:/\b(?<!(stock|crypto|investment|asset|trading|financial|project) )portfolio\b(?! (opt|optimi[sz]ation|optimi[sz]er|management|manager|analysis|analytics|tracker|tracking|risk|theory|backtest(ing)?|rebalanc\w*|allocation))|personal (web)?site|personal blog/i,
    lines:[x=>`A personal portfolio. The person moved on ${span(x.quiet)} ago.`, x=>`It showed off its owner's work. The work stopped ${span(x.quiet)} ago.`]},
-  {id:'weather', score:9, on:'title', re:/\bweather\b/i, lines:[x=>`A weather app. Current conditions: no commits for ${span(x.quiet)}.`]},
-  {id:'calc', score:9, on:'title', re:/\bcalculator\b/i, lines:[x=>`A calculator. Final count: ${plural(x.total,'commit')}.`]},
+  {id:'weather', score:9, on:'title', test:x=>{ const t = titleText(x.r); return !NOT_APP.test(t) && t.match(/\bweather\b/i); }, lines:[x=>`A weather app. Current conditions: no commits for ${span(x.quiet)}.`]},
+  {id:'calc', score:9, on:'title', test:x=>{ const t = titleText(x.r); return !NOT_APP.test(t) && t.match(/\bcalculator\b/i); }, lines:[x=>`A calculator. Final count: ${plural(x.total,'commit')}.`]},
   {id:'game', score:8, on:'head', re:/\b(game(?![- ]?(engines?|porting|ports?|tool(kit|s)?|kits?|framework|librar(y|ies)|libs?|sdk|servers?|bots?|launchers?|mods?|modding|dev(elopment)?|api|assets|emulators?|editors?|jams?|data|analytics|theory)\b)|2048|tetris|snake|chess|tic[- ]?tac[- ]?toe|pong|sudoku|platformer)\b/i,
    lines:[x=>`A game. Game over after ${plural(x.total,'commit')}.`, x=>`A game. Nobody pressed continue.`]},
   {id:'landing', score:9, on:'title', re:/\blanding[- ]page\b/i, lines:[x=>`A landing page. Nobody landed.`]},
-  {id:'shop', score:5, on:'title', re:/e-?commerce|online (store|shop)|\bshop(ping)? (app|site|cart)\b/i, lines:[x=>`An online store. Closed ${span(x.quiet)} ago. No sign on the door.`]},
+  {id:'shop', score:5, on:'title', test:x=>{ const t = titleText(x.r); return !NOT_APP.test(t) && t.match(/(e-?commerce|online (store|shop)|\bshop(ping)? (app|site|cart)\b)/i); }, lines:[x=>`An online store. Closed ${span(x.quiet)} ago. No sign on the door.`]},
   {id:'bot', score:5, on:'title', re:/\b(discord|telegram|whatsapp|slack|twitter) ?bot\b/i, lines:[(x,m)=>`A ${m[1]} bot. Even the bot gave up ${span(x.quiet)} ago.`]},
   {id:'hack', score:6, on:'claim', re:/\bhackathon\b|\bgame ?jam\b/i, lines:[(x,m)=>`Built for a ${m[0].toLowerCase()}. The ${m[0].toLowerCase()} ended. So did this.`]},
-  {id:'awesome', score:7, on:'name', re:/^awesome/i, lines:[x=>`An awesome list. The last awesome thing was added ${span(x.quiet)} ago.`]},
-  {id:'learn', score:4, on:'head', re:/\b(practice|tutorial|bootcamp|homework|assignment|exercises|my first|learn(ing)? (javascript|python|react|java|c\+\+|rust|go|to code|web))\b/i,
+  {id:'awesome', score:7, test:x=> /^awesome[-_]/i.test(x.r.name) && /awesome\.re|^\s*[-*] \[[^\]]+\]\(/m.test(x.r.readme_head||'') && [1], lines:[x=>`An awesome list. The last awesome thing was added ${span(x.quiet)} ago.`]},
+  {id:'learn', score:4, on:'head', re:/\b((?<!(best|good|recommended|security|coding) )practice|bootcamp|homework|assignment|exercises|my first|learn(ing)? (javascript|python|react|java|c\+\+|rust|go|to code|web))\b/i,
    lines:[x=>`A learning project. Lesson learned in ${span(x.life)}.`, x=>`It was practice. Practice ended ${span(x.quiet)} ago.`]},
   {id:'ai', score:3, on:'title', re:/\b(ai|gpt|llm|chatbot|agentic|rag|langchain|gemini|openai)\b/i,
    lines:[x=>`It was powered by AI. Then by nobody.`, x=>`An AI project. The humans stopped committing ${span(x.quiet)} ago.`]},
