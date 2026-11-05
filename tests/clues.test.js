@@ -26,6 +26,8 @@ const SPAN = /\b\d[\d,.]*\s(second|minute|hour|day|month|year)s?\b/g;
         if (re.test(c.fun) && re.test(c.wit)) fail(s.user, c, `funeral repeats "${w}"`);
       }
       if (/\bevery 1 /.test(c.clues.join(' '))) fail(s.user, c, 'says "every 1 minute"');
+      // CH's pick (11-05): a short burst gets its age and pace on one line, first
+      if (c.name === 'ghosts-of-bugs-past' && c.clues[0] !== 'It lived 58 minutes. A commit about every 10, then none, ever.') fail(s.user, c, 'first clue is not the age + pace line');
     }
   }
   await b.close();

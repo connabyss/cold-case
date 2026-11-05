@@ -281,9 +281,7 @@ const LIB = [
   {id:'lazy', score:7, test:x=>{ const lz = x.cs.filter(c=>LAZY.test(c.msg.trim())); return x.n>=5 && lz.length/x.n>=.6 && [lz.length]; },
    lines:[(x,m)=>`${m[0]} of its ${x.total > x.n ? 'last ' + x.n : x.n} commits are one word long. It never explained itself.`]},
   {id:'deadratio', score:11, test:x=>{ const r = x.quiet / x.life; return x.n>1 && x.life >= 60e3 && r >= 50 && [Math.round(r)]; },
-   lines:[(x,m)=>`It was alive for ${span(x.life)}. It has now been dead ${m[0].toLocaleString()} times longer.`, (x,m)=>`For every minute it was alive, it has now been dead ${m[0].toLocaleString()}.`]},
-  {id:'burst', score:9, test:x=> x.n>=5 && x.life < 3*H && x.life > 0 && [1],
-   lines:[x=>`A commit about every ${span(x.life/(x.n-1)).replace(/^1 /,'')}. Then none, ever.`]},
+   lines:[(x,m)=>`It has now been dead ${m[0].toLocaleString()} times longer than it was ever alive.`, (x,m)=>`For every minute it was alive, it has now been dead ${m[0].toLocaleString()}.`]},
   // ---- when it happened ----
   {id:'newyear', score:9, test:x=>{ const d = x.born.date.slice(5,10); return (d==='01-01'||d==='12-31') && [d]; },
    lines:[x=>`Started on New Year's. A resolution. It lasted ${span(x.life)}.`]},
@@ -320,6 +318,14 @@ function analyze(repo, owner){
   const n = cs.length;
   // how long it lived
   if (n === 1) add(`One commit: ${q(born.msg)}. It was also the last.`, 9);
+  else if (n >= 5 && life < 3*H) {
+    // a short burst: its age and its pace on one line ("It lived 58 minutes. A commit every 10, then none, ever.")
+    const gaps = cs.slice(1).map((c,i) => c.t - cs[i].t), avg = life/(n-1), unit = t => t.split(' ').pop().replace(/s$/,'');
+    let every = span(avg); if (unit(every) === unit(span(life))) every = every.replace(/ \S+$/,'');
+    every = every.replace(/^1( \S+)?$/, m => m === '1' ? '' : m.slice(2)); // "every 1 minute" -> "every minute"
+    const exact = gaps.every(g => span(g) === span(avg));
+    add(`It lived ${span(life)}. A commit ${exact ? '' : 'about '}every${every ? ' ' + every : ' ' + unit(span(life))}, then none, ever.`, 12);
+  }
   else if (life < H) add(`The victim lived ${span(life)}.`, 9);
   else if (life < D) add(`The victim lived ${span(life)}.`, 7);
   else if (life < 7*D) add(`The victim lived ${span(life)}.`, 5);
@@ -456,7 +462,7 @@ function vary(cases){
       }
       picked.sort((a,b)=>b.score-a.score);
       // the plain age goes first, so the jokes about it land after
-      picked.sort((a,b)=>b.text.startsWith('The victim lived') - a.text.startsWith('The victim lived')); c.clues = picked;
+      const age = t => /^(The victim lived|It lived) /.test(t); picked.sort((a,b)=>age(b.text) - age(a.text)); c.clues = picked;
       picked.forEach(x => seen[ckey(x.text)] = (seen[ckey(x.text)]||0) + 1);
     }
     c.wit = witness(c, true).find(w => !wseen[ckey(w.text)]) || null; if (c.wit) wseen[ckey(c.wit.text)] = 1;

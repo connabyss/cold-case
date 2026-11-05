@@ -89,9 +89,7 @@ const LIB = [
   {id:'lazy', score:7, test:x=>{ const lz = x.cs.filter(c=>LAZY.test(c.msg.trim())); return x.n>=5 && lz.length/x.n>=.6 && [lz.length]; },
    lines:[(x,m)=>`${m[0]} of its ${x.total > x.n ? 'last ' + x.n : x.n} commits are one word long. It never explained itself.`]},
   {id:'deadratio', score:11, test:x=>{ const r = x.quiet / x.life; return x.n>1 && x.life >= 60e3 && r >= 50 && [Math.round(r)]; },
-   lines:[(x,m)=>`It was alive for ${span(x.life)}. It has now been dead ${m[0].toLocaleString()} times longer.`, (x,m)=>`For every minute it was alive, it has now been dead ${m[0].toLocaleString()}.`]},
-  {id:'burst', score:9, test:x=> x.n>=5 && x.life < 3*H && x.life > 0 && [1],
-   lines:[x=>`A commit about every ${span(x.life/(x.n-1)).replace(/^1 /,'')}. Then none, ever.`]},
+   lines:[(x,m)=>`It has now been dead ${m[0].toLocaleString()} times longer than it was ever alive.`, (x,m)=>`For every minute it was alive, it has now been dead ${m[0].toLocaleString()}.`]},
   // ---- when it happened ----
   {id:'newyear', score:9, test:x=>{ const d = x.born.date.slice(5,10); return (d==='01-01'||d==='12-31') && [d]; },
    lines:[x=>`Started on New Year's. A resolution. It lasted ${span(x.life)}.`]},

@@ -58,7 +58,7 @@ function vary(cases){
       }
       picked.sort((a,b)=>b.score-a.score);
       // the plain age goes first, so the jokes about it land after
-      picked.sort((a,b)=>b.text.startsWith('The victim lived') - a.text.startsWith('The victim lived')); c.clues = picked;
+      const age = t => /^(The victim lived|It lived) /.test(t); picked.sort((a,b)=>age(b.text) - age(a.text)); c.clues = picked;
       picked.forEach(x => seen[ckey(x.text)] = (seen[ckey(x.text)]||0) + 1);
     }
     c.wit = witness(c, true).find(w => !wseen[ckey(w.text)]) || null; if (c.wit) wseen[ckey(c.wit.text)] = 1;
