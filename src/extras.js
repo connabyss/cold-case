@@ -24,12 +24,15 @@ function witness(c, all){
 // One funeral line per case.
 function funerals(c){
   const r = c.repo, f = r.forks, s = r.stars;
-  if (f >= 2) return [`Survived by ${f} forks. In lieu of flowers, the family asks for stars.`, `Survived by ${f} forks, none of whom have called.`, `${f} forks carry its code now. None of them visit.`, `It leaves behind ${f} forks and a lot of open questions.`, `${f} forks at the reading of the will. Nobody got anything.`];
+  if (f >= 2) { const fk = f.toLocaleString(); return [`Survived by ${fk} forks. In lieu of flowers, the family asks for stars.`, `Survived by ${fk} forks, none of whom have called.`, `${fk} forks carry its code now. None of them visit.`, `It leaves behind ${fk} forks and a lot of open questions.`, `${fk} forks at the reading of the will. Nobody got anything.`]; }
   if (f === 1) return [`Survived by one fork, who has not been seen since.`, `One fork survives it. It doesn't talk about what happened.`];
   if (s >= 2) return [`${s} people starred it. None came to the service.`, `${s} stars on the headstone. No visitors.`, `${s} people bookmarked it for later. Later never came.`];
   return [`No survivors. Not even a fork.`, `The service was small. Nobody came.`, `Buried in an unmarked repo.`, s === 0 ? `No flowers. No forks. No stars.` : `One star. One mourner. Probably the owner.`];
 }
 function funeral(c){ const v = funerals(c); return v[hash(c.repo.name + 'fun') % v.length]; }
+
+// The facts a line leans on, so one card never states the same number twice.
+const facts = t => (t.replace(/<[^>]+>/g,'').match(/\b\d[\d,.]*\s(second|minute|hour|day|month|year)s?\b|\ba second\b/g) || []).map(k => k.replace(/s$/,''));
 
 // Page-level variety: the same joke twice in a row stops being a joke.
 const ckey = t => t.replace(/<[^>]+>/g,'').replace(/“[^”]*”/g,'Q').replace(/\d[\d:,.]*\s?(AM|PM)?/g,'#').slice(0,16);
@@ -46,14 +49,25 @@ function vary(cases){
       c.stale = !fresh.length; if (fresh.length) pool = fresh; else pool = pool.sort((a,b)=>b.adj-a.adj).slice(0,1);
       const lifeTxt = span(c.life);
       if (pool.some(x => !x.text.startsWith('The victim lived') && x.text.includes(lifeTxt))) pool = pool.filter(x => !x.text.startsWith('The victim lived'));
-      const picked = pool.sort((a,b)=>b.adj-a.adj).slice(0,4);
-      picked.sort((a,b)=>b.score-a.score); c.clues = picked;
+      // each clue brings a new fact: no time span ("58 minutes") told twice on one card
+      const picked = [], used = new Set();
+      for (const x of pool.sort((a,b)=>b.adj-a.adj)) {
+        if (picked.length >= 4) break;
+        const ks = facts(x.text); if (ks.some(k => used.has(k))) continue;
+        picked.push(x); ks.forEach(k => used.add(k));
+      }
+      picked.sort((a,b)=>b.score-a.score);
+      // the plain age goes first, so the jokes about it land after
+      picked.sort((a,b)=>b.text.startsWith('The victim lived') - a.text.startsWith('The victim lived')); c.clues = picked;
       picked.forEach(x => seen[ckey(x.text)] = (seen[ckey(x.text)]||0) + 1);
     }
     c.wit = witness(c, true).find(w => !wseen[ckey(w.text)]) || null; if (c.wit) wseen[ckey(c.wit.text)] = 1;
     const fs = funerals(c), start = hash(c.repo.name + 'fun') % fs.length;
     const rot = fs.map((_,i)=>fs[(start+i)%fs.length]);
-    c.fun = rot.find(t => !fseen[ckey(t)]) || null; if (c.fun) fseen[ckey(c.fun)] = 1;
+    // the funeral shouldn't repeat what the witness or a clue just said ("Nobody forked it" / "No forks")
+    const said = [c.wit ? c.wit.text : '', ...c.clues.map(x => x.text)].join(' ');
+    const echo = t => ['fork','star'].some(w => new RegExp('\\b' + w).test(t.toLowerCase()) && new RegExp('\\b' + w).test(said.toLowerCase()));
+    c.fun = rot.find(t => !fseen[ckey(t)] && !echo(t)) || rot.find(t => !fseen[ckey(t)]) || null; if (c.fun) fseen[ckey(c.fun)] = 1;
   }
 }
 
