@@ -98,6 +98,34 @@ function profile(dead){
   return mo.slice(0,5);
 }
 
+// A clean record: no bodies yet, so name the next likely victim and list what looks suspicious.
+// Uses the same death rule as analyze(): quiet 30 days, or quiet 3 days after a life under 2 days.
+function watchlist(alive, breathingN){
+  if (!alive.length) return null;
+  const now = LIVE ? Date.now() : NOW.getTime();
+  const lifeOf = c => Math.max(0, Date.parse(c.repo.pushed) - Date.parse(c.repo.created || c.repo.pushed));
+  const dueOf = c => Date.parse(c.repo.pushed) + (lifeOf(c) < 2*D ? 3*D : 30*D);
+  const next = alive.slice().sort((a,b) => dueOf(a) - dueOf(b))[0];
+  const due = Math.max(dueOf(next), now + H);
+  const cs = alive.flatMap(c => c.repo.commits);
+  const local = cs.map(x => clock(x.date)).filter(k => !k.utc);
+  const night = local.filter(k => k.hour >= 21 || k.hour < 5).length;
+  const firsts = alive.filter(c => c.repo.commits.some(x => FIRST.test(x.msg.trim()))).length;
+  const recent = alive.filter(c => now - Date.parse(c.repo.pushed) < 3*D).length;
+  const baby = alive.filter(c => lifeOf(c) < D).sort((a,b) => lifeOf(a) - lifeOf(b))[0];
+  const newest = cs.filter(x => x.msg && !/^Merge (pull request|branch)/.test(x.msg)).sort((a,b) => Date.parse(b.date) - Date.parse(a.date))[0];
+  const said = m => { m = m.trim().replace(/[.!]+$/,''); return m.length <= 60 ? m : m.slice(0, 60).replace(/\s+\S*$/,'') + '…'; };
+  const habits = [];
+  habits.push(`${breathingN.toLocaleString()} project${breathingN===1?'':'s'}, every one still warm. Nobody is that careful.`);
+  if (local.length >= 3 && night / local.length >= .4) habits.push(`${night === local.length ? 'Every one' : night} of the last ${local.length} commits filed after 9 PM. Works the night shift.`);
+  if (recent >= 3) habits.push(`Touched ${recent} projects in the last 3 days. Spread thin. Somebody gets dropped.`);
+  if (baby && baby !== next) habits.push(`${baby.repo.name} is ${span(lifeOf(baby))} old and already quiet.`);
+  if (firsts >= 2 && firsts / alive.length >= .5) habits.push(`Says “first commit” a lot. The second one is the hard part.`);
+  if (newest) habits.push(`Last heard saying “${said(newest.msg)}.”`);
+  habits.push(`Clean records don't exist. We just haven't found the bodies yet.`);
+  return {next, due, left: due - now, quiet: now - Date.parse(next.repo.pushed), short: lifeOf(next) < 2*D, habits: habits.slice(0, 5)};
+}
+
 // The detective's thoughts: at most two per page, each triggered by a fact.
 function thoughts(dead){
   const out = [];

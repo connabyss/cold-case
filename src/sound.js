@@ -1,6 +1,7 @@
 // ===== Sound: all made in the browser, no files. Starts on the first click; one button mutes it. =====
+// No background loop: the old rain bed played nonstop and sounded like white noise (CH 11-12).
 const SFX = (() => {
-  let ctx = null, master = null, rain = null, on = true;
+  let ctx = null, master = null, on = true;
   try { on = localStorage.getItem('ccu-sound') !== 'off'; } catch(e) {}
   const noiseBuf = () => { const b = ctx.createBuffer(1, ctx.sampleRate*2, ctx.sampleRate), d = b.getChannelData(0); for (let i=0;i<d.length;i++) d[i] = Math.random()*2-1; return b; };
   let NB;
@@ -8,11 +9,6 @@ const SFX = (() => {
     if (ctx || !on) return;
     const AC = window.AudioContext || window.webkitAudioContext; if (!AC) return;
     ctx = new AC(); master = ctx.createGain(); master.gain.value = .55; master.connect(ctx.destination); NB = noiseBuf();
-    // rain: soft filtered noise, always under everything
-    const src = ctx.createBufferSource(); src.buffer = NB; src.loop = true;
-    const f = ctx.createBiquadFilter(); f.type = 'bandpass'; f.frequency.value = 1400; f.Q.value = .4;
-    rain = ctx.createGain(); rain.gain.value = 0; src.connect(f).connect(rain).connect(master); src.start();
-    rain.gain.linearRampToValueAtTime(.05, ctx.currentTime + 2);
     sting();
   }
   const ok = () => ctx && on;

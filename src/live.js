@@ -95,19 +95,23 @@ async function loadSuspect(user, progress, fresh){
   for (let pg = 1; pg <= 3; pg++) { const l = await gh(`/users/${encodeURIComponent(user)}/repos?per_page=100&sort=pushed&type=owner&page=${pg}`); if (!l) break; listed = listed.concat(l.json); if (l.json.length < 100) break; }
   const own = listed.filter(m => !m.fork && !m.private && m.size > 0);
   const quietFor = m => Date.now() - Date.parse(m.pushed_at), lifeOf = m => Date.parse(m.pushed_at) - Date.parse(m.created_at);
+  // the same death rule analyze() uses on an opened file, read from the basic record, so a big account
+  // and a small one are judged alike (CH 11-12: 11 projects tipped him into a "dead = a year" rule and 0 bodies)
+  const deadByRecord = m => m.archived || quietFor(m) > 30*D || (quietFor(m) > 3*D && lifeOf(m) < 2*D);
   let metas, extra = null;
   if (own.filter(m => !m.archived).length <= 10) metas = own.filter(m => !m.archived);
   else {
     const breathing = own.filter(m => quietFor(m) < 3*D && !m.archived).slice(0, 2);
-    const deadish = own.filter(m => quietFor(m) > 30*D);
+    const deadish = own.filter(m => deadByRecord(m) && !m.archived);
     const shortest = deadish.slice().sort((a,b) => lifeOf(a) - lifeOf(b)).slice(0, 6);
-    const starred = deadish.filter(m => !shortest.includes(m)).sort((a,b) => b.stargazers_count - a.stargazers_count).slice(0, 10 - shortest.length);
+    const starred = deadish.filter(m => !shortest.includes(m)).sort((a,b) => b.stargazers_count - a.stargazers_count).slice(0, 10 - breathing.length - shortest.length);
     metas = [...breathing, ...shortest, ...starred];
-    const yearDead = own.filter(m => quietFor(m) > 365*D || m.archived); // archived counts as dead, however recent
-    const oldest = yearDead.slice().sort((a,b) => quietFor(b) - quietFor(a))[0];
-    extra = {total: u.json.public_repos, listedAll: listed.length, listed: own.length, dead: yearDead.length, archived: own.filter(m => m.archived).length,
-      stars: yearDead.reduce((t,m) => t + m.stargazers_count, 0), forks: yearDead.reduce((t,m) => t + m.forks_count, 0),
-      oldest: oldest ? {name: oldest.name, quiet: quietFor(oldest)} : null, breathing: own.filter(m => quietFor(m) < 365*D && !m.archived).map(m => m.name)};
+    const corpses = own.filter(deadByRecord); // archived counts as dead, however recent
+    const oldest = corpses.filter(m => quietFor(m) > 365*D).sort((a,b) => quietFor(b) - quietFor(a))[0];
+    extra = {total: u.json.public_repos, listedAll: listed.length, listed: own.length, dead: corpses.length, archived: own.filter(m => m.archived).length,
+      stars: corpses.reduce((t,m) => t + m.stargazers_count, 0), forks: corpses.reduce((t,m) => t + m.forks_count, 0),
+      oldest: oldest ? {name: oldest.name, quiet: quietFor(oldest)} : null,
+      deadNames: corpses.map(m => m.name), breathing: own.filter(m => !deadByRecord(m)).map(m => m.name)};
   }
   const repos = [];
   for (let i = 0; i < metas.length; i++) { progress && progress(i, metas.length, metas[i].name); const r = await loadRepo(user, metas[i]); if (r) repos.push(r); }
