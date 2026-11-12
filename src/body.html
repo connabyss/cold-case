@@ -42,6 +42,7 @@ function onClock(iso, ref){
   return new Date(Date.parse(iso) + mins*60e3).toISOString().slice(0,19) + off;
 }
 // how long ago something happened, measured now (the page may have been open a while)
+function dueDay(t){ return new Date(t).toLocaleDateString('en-US', {month:'short', day:'numeric'}); }
 function ago(t){ const ms = (LIVE ? Date.now() : NOW.getTime()) - t; return ms < 60e3 ? 'moments ago' : span(ms) + ' ago'; }
 function span(ms){
   const min = Math.round(ms/60e3);
@@ -330,28 +331,31 @@ function render(name){
   const shown = s.hidden_owner ? 'Name withheld' : name;
   const all = s.repos.map(r => analyze(r, s));
   const dead = all.filter(c => c.dead), alive = all.filter(c => !c.dead);
-  const X = s.extra, bodies = X ? Math.max(dead.length, X.dead) : dead.length;
-  // one count everywhere: projects shown as breathing plus the unopened ones still breathing
-  const more = X ? X.breathing.filter(n => !alive.some(c => c.repo.name === n) && !dead.some(c => c.repo.name === n)).length : 0;
+  const X = s.extra, opened = n => all.some(c => c.repo.name === n);
+  // one count everywhere: opened files judged by analyze(), unopened ones judged the same way from their record (live.js)
+  const bodies = dead.length + (X ? (X.deadNames ? X.deadNames.filter(n => !opened(n)).length : Math.max(0, X.dead - dead.length)) : 0);
+  const more = X ? X.breathing.filter(n => !opened(n)).length : 0;
   const breathingN = alive.length + more;
+  const watch = bodies ? null : watchlist(alive, breathingN);
   const skipped = X ? X.listedAll - bodies - breathingN : 0;
   const big = X ? [
-    bodies >= 100 ? `Body count: ${bodies.toLocaleString()}. The morgue is full.` : bodies >= 30 ? `Body count: ${bodies}. The morgue is asking questions.` : `Body count: ${bodies}, untouched for over a year.`,
+    bodies >= 100 ? `Body count: ${bodies.toLocaleString()}. The morgue is full.` : bodies >= 30 ? `Body count: ${bodies}. The morgue is asking questions.` : null,
     X.stars >= 50 ? `The dead hold ${X.stars.toLocaleString()} stars between them. Nobody visits.` : null,
     X.forks >= 20 ? `${X.forks.toLocaleString()} forks were taken from the dead. Organ donors.` : null,
     X.oldest ? `Oldest cold case: ${X.oldest.name}, untouched for ${span(X.oldest.quiet)}.` : null,
     X.archived ? `${X.archived === 1 ? 'One was' : X.archived + ' were'} laid to rest properly (archived). The rest were just left there.` : null,
     X.total > X.listedAll + 5 ? `Only the newest ${X.listedAll} were searched${skipped > 0 ? ` (${skipped} of them forks or empty, not counted)` : ''}. ${X.total - X.listedAll === 1 ? 'One more is' : (X.total - X.listedAll).toLocaleString() + ' more are'} still in the basement.` : null,
   ].filter(Boolean) : [];
-  const mo0 = dead.length ? profile(dead) : all.length ? [`No bodies found. Suspiciously clean.`, `${all.length} public project${all.length===1?'':'s'}, all still breathing.`, `Most recent sign of life: ${ago(Math.max(...all.map(c=>Date.parse(c.repo.pushed))))}.`, `The unit will keep an eye on this one.`] : [`No public projects. No bodies. No fingerprints.`, `Either innocent or very careful.`];
-  const mo = X ? big.concat(mo0.filter(l => !/^Total commits|^First known/.test(l))).slice(0, 6) : mo0;
+  const mo0 = dead.length ? profile(dead) : watch ? watch.habits : [`No public projects. No bodies. No fingerprints.`, `Either innocent or very careful.`];
+  const mo = X && !watch ? big.concat(mo0.filter(l => !/^First known/.test(l))).slice(0, 6) : mo0;
   out.innerHTML = `<section class="rap poster" aria-label="Wanted poster">
-    <div class="wanted">WANTED <span>for questioning</span></div>
+    ${watch ? `<div class="wanted poi">PERSON OF INTEREST <span>no bodies. yet.</span></div>` : `<div class="wanted">WANTED <span>for questioning</span></div>`}
     <div class="mug">${s.avatar ? `<img src="${s.avatar}" alt="">` : `<div class="noface">?</div>`}<div class="board">${esc(shown.toUpperCase())}</div></div>
-    <div><div class="k">In connection with</div><div class="count">${bodies.toLocaleString()}</div><div class="k">project death${bodies===1?'':'s'} · ${breathingN.toLocaleString()} still breathing</div>
-    <div class="k" style="margin-top:14px">Known M.O.</div>
+    ${watch ? `<div><div class="k">Next likely victim</div><div class="victim">${esc(watch.next.repo.name)}</div><div class="k">expected time of death: ${esc(dueDay(watch.due))} · ${breathingN.toLocaleString()} still breathing</div>`
+      : `<div><div class="k">In connection with</div><div class="count">${bodies.toLocaleString()}</div><div class="k">project death${bodies===1?'':'s'} · ${breathingN.toLocaleString()} still breathing</div>`}
+    <div class="k" style="margin-top:14px">${watch ? 'Suspicious habits' : 'Known M.O.'}</div>
     <ul class="priors">${mo.map(p=>`<li>${esc(p)}</li>`).join('')}</ul></div>
-    <div class="stamp">${bodies >= 50 ? 'MOST WANTED' : bodies ? (bodies >= 3 ? 'SERIAL OFFENDER' : 'PERSON OF INTEREST') : 'CLEAN RECORD'}</div></section>
+    <div class="stamp">${bodies >= 50 ? 'MOST WANTED' : bodies ? (bodies >= 3 ? 'SERIAL OFFENDER' : 'PERSON OF INTEREST') : watch ? 'UNDER WATCH' : 'CLEAN RECORD'}</div></section>
     ${s.hidden_owner ? '' : !(LIVE && AUTH_URL) ? `<div class="sharerow"><button id="mkcard">THIS IS ME: MAKE MY POSTER</button><span>Only make your own. Stamps from the court are included.</span></div>`
       : ME && ME.toLowerCase() === (s.user || '').toLowerCase() ? `<div class="sharerow"><button id="mkcard">MAKE MY WANTED POSTER</button><span>Signed in as ${esc(ME)}. Stamps from the court are included.</span></div>`
       : !ME ? `<div class="sharerow"><button class="ghost" id="signin2">IS THIS YOU? SIGN IN TO MAKE THE POSTER</button></div>` : ''}
@@ -379,6 +383,14 @@ function render(name){
   const th = thoughts(files);
   if (bodies >= 100) th.splice(0, th.length, {at: 0, text: `${bodies.toLocaleString()} files. I'm going to need a bigger desk.`}, ...th.filter(t => t.at > 0).slice(0,1));
   if (files.length) out.appendChild(stack(files, X && bodies > files.length ? `THE ${files.length} MOST NOTABLE OF ${bodies.toLocaleString()}` : 'THE VICTIMS', {thoughts: th, court: () => court(shown, dead, alive, out)}));
+  else if (watch) out.insertAdjacentHTML('beforeend', `<p class="thought">${breathingN.toLocaleString()} project${breathingN===1?'':'s'}, all still breathing. I don't trust it. I've already started the paperwork.</p>
+    <article class="folder pending"><div class="k">Case 1 · filed in advance</div><h3>${esc(watch.next.repo.name)}</h3>
+    <div class="meta"><div><div class="k">Born</div><div class="v">${esc(clock(watch.next.repo.created || watch.next.born.date).day)}</div></div>
+    <div><div class="k">Expected</div><div class="v">${esc(dueDay(watch.due))}</div></div><div><div class="k">Status</div><div class="v">Still breathing</div></div></div>
+    <ol class="clues"><li data-n="1">Last touched ${ago(Date.parse(watch.next.repo.pushed))}. We'll wait.</li>
+    <li data-n="2">${watch.short ? `It lived less than two days before going quiet. Three days of silence and it's ours. ${span(watch.left)} to go.` : `The rule: thirty days without a commit and it's ours. ${span(watch.left)} to go.`}</li>
+    <li data-n="3">${(watch.next.repo.total||watch.next.repo.commits.length).toLocaleString()} commit${(watch.next.repo.total||watch.next.repo.commits.length)===1?'':'s'} so far. Every victim on this desk had a last one.</li></ol>
+    <div class="ruling">Cause of death: pending. Commit to it and this file goes away.</div></article>`);
   else out.insertAdjacentHTML('beforeend', `<p class="thought">${all.length ? `${all.length} project${all.length===1?'':'s'}, all still breathing. I don't trust it.` : `Nothing here. You can't kill a project you never started.`}</p>`);
   if (alive.length) out.insertAdjacentHTML('beforeend', `<p class="alive">Still breathing: ${alive.slice(0,10).map(c=>`<b>${esc(c.repo.name)}</b> (last touched ${ago(Date.parse(c.repo.pushed))})`).join(', ')}${more ? `, and ${more} more` : ''}. For now.</p>`);
 }

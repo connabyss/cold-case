@@ -75,9 +75,11 @@ footer{margin-top:50px;color:var(--dim);font-size:13px;max-width:70ch}
 .poster{grid-template-columns:170px 1fr;border:2px solid var(--ink);outline:8px solid var(--manila);outline-offset:-14px}
 .wanted{grid-column:1/-1;font:900 clamp(48px,9vw,96px)/.85 var(--display);letter-spacing:.06em;text-align:center;border-bottom:3px solid var(--ink);padding-bottom:10px}
 .wanted span{display:block;font-size:.26em;letter-spacing:.4em;margin-top:6px}
+.wanted.poi{font-size:clamp(30px,6.4vw,70px)}.wanted.poi span{font-size:.36em}
+.victim{font:900 clamp(30px,5vw,52px)/1 var(--display);color:var(--stamp);overflow-wrap:anywhere;margin:4px 0 6px}
 .count{font:900 84px/.9 var(--display);color:var(--stamp)}
 .noface{width:150px;height:150px;border:3px solid var(--ink);display:grid;place-items:center;font:900 90px var(--display);color:var(--ink-soft);background:repeating-linear-gradient(0deg,transparent 0 18px,rgba(42,33,24,.15) 18px 19px)}
-.poster{padding-bottom:84px}
+.poster{padding-bottom:100px}
 .poster .stamp{top:auto;bottom:26px}
 .witness{margin-top:14px;padding:10px 12px;border:1px dashed var(--ink-soft)}
 .funeral{margin-top:12px;font-style:italic;color:var(--ink-soft)}
@@ -178,6 +180,7 @@ function onClock(iso, ref){
   return new Date(Date.parse(iso) + mins*60e3).toISOString().slice(0,19) + off;
 }
 // how long ago something happened, measured now (the page may have been open a while)
+function dueDay(t){ return new Date(t).toLocaleDateString('en-US', {month:'short', day:'numeric'}); }
 function ago(t){ const ms = (LIVE ? Date.now() : NOW.getTime()) - t; return ms < 60e3 ? 'moments ago' : span(ms) + ' ago'; }
 function span(ms){
   const min = Math.round(ms/60e3);
@@ -503,6 +506,34 @@ function profile(dead){
   return mo.slice(0,5);
 }
 
+// A clean record: no bodies yet, so name the next likely victim and list what looks suspicious.
+// Uses the same death rule as analyze(): quiet 30 days, or quiet 3 days after a life under 2 days.
+function watchlist(alive, breathingN){
+  if (!alive.length) return null;
+  const now = LIVE ? Date.now() : NOW.getTime();
+  const lifeOf = c => Math.max(0, Date.parse(c.repo.pushed) - Date.parse(c.repo.created || c.repo.pushed));
+  const dueOf = c => Date.parse(c.repo.pushed) + (lifeOf(c) < 2*D ? 3*D : 30*D);
+  const next = alive.slice().sort((a,b) => dueOf(a) - dueOf(b))[0];
+  const due = Math.max(dueOf(next), now + H);
+  const cs = alive.flatMap(c => c.repo.commits);
+  const local = cs.map(x => clock(x.date)).filter(k => !k.utc);
+  const night = local.filter(k => k.hour >= 21 || k.hour < 5).length;
+  const firsts = alive.filter(c => c.repo.commits.some(x => FIRST.test(x.msg.trim()))).length;
+  const recent = alive.filter(c => now - Date.parse(c.repo.pushed) < 3*D).length;
+  const baby = alive.filter(c => lifeOf(c) < D).sort((a,b) => lifeOf(a) - lifeOf(b))[0];
+  const newest = cs.filter(x => x.msg && !/^Merge (pull request|branch)/.test(x.msg)).sort((a,b) => Date.parse(b.date) - Date.parse(a.date))[0];
+  const said = m => { m = m.trim().replace(/[.!]+$/,''); return m.length <= 60 ? m : m.slice(0, 60).replace(/\s+\S*$/,'') + '…'; };
+  const habits = [];
+  habits.push(`${breathingN.toLocaleString()} project${breathingN===1?'':'s'}, every one still warm. Nobody is that careful.`);
+  if (local.length >= 3 && night / local.length >= .4) habits.push(`${night === local.length ? 'Every one' : night} of the last ${local.length} commits filed after 9 PM. Works the night shift.`);
+  if (recent >= 3) habits.push(`Touched ${recent} projects in the last 3 days. Spread thin. Somebody gets dropped.`);
+  if (baby && baby !== next) habits.push(`${baby.repo.name} is ${span(lifeOf(baby))} old and already quiet.`);
+  if (firsts >= 2 && firsts / alive.length >= .5) habits.push(`Says “first commit” a lot. The second one is the hard part.`);
+  if (newest) habits.push(`Last heard saying “${said(newest.msg)}.”`);
+  habits.push(`Clean records don't exist. We just haven't found the bodies yet.`);
+  return {next, due, left: due - now, quiet: now - Date.parse(next.repo.pushed), short: lifeOf(next) < 2*D, habits: habits.slice(0, 5)};
+}
+
 // The detective's thoughts: at most two per page, each triggered by a fact.
 function thoughts(dead){
   const out = [];
@@ -517,8 +548,9 @@ function thoughts(dead){
 }
 
 // ===== Sound: all made in the browser, no files. Starts on the first click; one button mutes it. =====
+// No background loop: the old rain bed played nonstop and sounded like white noise (CH 11-12).
 const SFX = (() => {
-  let ctx = null, master = null, rain = null, on = true;
+  let ctx = null, master = null, on = true;
   try { on = localStorage.getItem('ccu-sound') !== 'off'; } catch(e) {}
   const noiseBuf = () => { const b = ctx.createBuffer(1, ctx.sampleRate*2, ctx.sampleRate), d = b.getChannelData(0); for (let i=0;i<d.length;i++) d[i] = Math.random()*2-1; return b; };
   let NB;
@@ -526,11 +558,6 @@ const SFX = (() => {
     if (ctx || !on) return;
     const AC = window.AudioContext || window.webkitAudioContext; if (!AC) return;
     ctx = new AC(); master = ctx.createGain(); master.gain.value = .55; master.connect(ctx.destination); NB = noiseBuf();
-    // rain: soft filtered noise, always under everything
-    const src = ctx.createBufferSource(); src.buffer = NB; src.loop = true;
-    const f = ctx.createBiquadFilter(); f.type = 'bandpass'; f.frequency.value = 1400; f.Q.value = .4;
-    rain = ctx.createGain(); rain.gain.value = 0; src.connect(f).connect(rain).connect(master); src.start();
-    rain.gain.linearRampToValueAtTime(.05, ctx.currentTime + 2);
     sting();
   }
   const ok = () => ctx && on;
@@ -784,7 +811,7 @@ async function loadRepo(owner, m){
 // Saved lookups: the saved copy is raw GitHub facts, not the jokes, so wording fixes show at once.
 // LOADER_VER changes whenever this loader changes (set by build.py), which retires every older copy.
 // Signed out, a copy lasts an hour (GitHub allows 60 lookups an hour); signed in, 10 minutes.
-const LOADER_VER = '6d9e3343';
+const LOADER_VER = 'b7063e77';
 try { for (let i = localStorage.length - 1; i >= 0; i--) { const k = localStorage.key(i); if (/^ccu-file-/.test(k) && !k.startsWith('ccu-file-' + LOADER_VER + '-')) localStorage.removeItem(k); } } catch(e) {}
 function cacheKey(user){ return 'ccu-file-' + LOADER_VER + '-' + user.toLowerCase(); }
 function forget(user){ try { localStorage.removeItem(cacheKey(user)); } catch(e) {} }
@@ -797,19 +824,23 @@ async function loadSuspect(user, progress, fresh){
   for (let pg = 1; pg <= 3; pg++) { const l = await gh(`/users/${encodeURIComponent(user)}/repos?per_page=100&sort=pushed&type=owner&page=${pg}`); if (!l) break; listed = listed.concat(l.json); if (l.json.length < 100) break; }
   const own = listed.filter(m => !m.fork && !m.private && m.size > 0);
   const quietFor = m => Date.now() - Date.parse(m.pushed_at), lifeOf = m => Date.parse(m.pushed_at) - Date.parse(m.created_at);
+  // the same death rule analyze() uses on an opened file, read from the basic record, so a big account
+  // and a small one are judged alike (CH 11-12: 11 projects tipped him into a "dead = a year" rule and 0 bodies)
+  const deadByRecord = m => m.archived || quietFor(m) > 30*D || (quietFor(m) > 3*D && lifeOf(m) < 2*D);
   let metas, extra = null;
   if (own.filter(m => !m.archived).length <= 10) metas = own.filter(m => !m.archived);
   else {
     const breathing = own.filter(m => quietFor(m) < 3*D && !m.archived).slice(0, 2);
-    const deadish = own.filter(m => quietFor(m) > 30*D);
+    const deadish = own.filter(m => deadByRecord(m) && !m.archived);
     const shortest = deadish.slice().sort((a,b) => lifeOf(a) - lifeOf(b)).slice(0, 6);
-    const starred = deadish.filter(m => !shortest.includes(m)).sort((a,b) => b.stargazers_count - a.stargazers_count).slice(0, 10 - shortest.length);
+    const starred = deadish.filter(m => !shortest.includes(m)).sort((a,b) => b.stargazers_count - a.stargazers_count).slice(0, 10 - breathing.length - shortest.length);
     metas = [...breathing, ...shortest, ...starred];
-    const yearDead = own.filter(m => quietFor(m) > 365*D || m.archived); // archived counts as dead, however recent
-    const oldest = yearDead.slice().sort((a,b) => quietFor(b) - quietFor(a))[0];
-    extra = {total: u.json.public_repos, listedAll: listed.length, listed: own.length, dead: yearDead.length, archived: own.filter(m => m.archived).length,
-      stars: yearDead.reduce((t,m) => t + m.stargazers_count, 0), forks: yearDead.reduce((t,m) => t + m.forks_count, 0),
-      oldest: oldest ? {name: oldest.name, quiet: quietFor(oldest)} : null, breathing: own.filter(m => quietFor(m) < 365*D && !m.archived).map(m => m.name)};
+    const corpses = own.filter(deadByRecord); // archived counts as dead, however recent
+    const oldest = corpses.filter(m => quietFor(m) > 365*D).sort((a,b) => quietFor(b) - quietFor(a))[0];
+    extra = {total: u.json.public_repos, listedAll: listed.length, listed: own.length, dead: corpses.length, archived: own.filter(m => m.archived).length,
+      stars: corpses.reduce((t,m) => t + m.stargazers_count, 0), forks: corpses.reduce((t,m) => t + m.forks_count, 0),
+      oldest: oldest ? {name: oldest.name, quiet: quietFor(oldest)} : null,
+      deadNames: corpses.map(m => m.name), breathing: own.filter(m => !deadByRecord(m)).map(m => m.name)};
   }
   const repos = [];
   for (let i = 0; i < metas.length; i++) { progress && progress(i, metas.length, metas[i].name); const r = await loadRepo(user, metas[i]); if (r) repos.push(r); }
@@ -1008,28 +1039,31 @@ function render(name){
   const shown = s.hidden_owner ? 'Name withheld' : name;
   const all = s.repos.map(r => analyze(r, s));
   const dead = all.filter(c => c.dead), alive = all.filter(c => !c.dead);
-  const X = s.extra, bodies = X ? Math.max(dead.length, X.dead) : dead.length;
-  // one count everywhere: projects shown as breathing plus the unopened ones still breathing
-  const more = X ? X.breathing.filter(n => !alive.some(c => c.repo.name === n) && !dead.some(c => c.repo.name === n)).length : 0;
+  const X = s.extra, opened = n => all.some(c => c.repo.name === n);
+  // one count everywhere: opened files judged by analyze(), unopened ones judged the same way from their record (live.js)
+  const bodies = dead.length + (X ? (X.deadNames ? X.deadNames.filter(n => !opened(n)).length : Math.max(0, X.dead - dead.length)) : 0);
+  const more = X ? X.breathing.filter(n => !opened(n)).length : 0;
   const breathingN = alive.length + more;
+  const watch = bodies ? null : watchlist(alive, breathingN);
   const skipped = X ? X.listedAll - bodies - breathingN : 0;
   const big = X ? [
-    bodies >= 100 ? `Body count: ${bodies.toLocaleString()}. The morgue is full.` : bodies >= 30 ? `Body count: ${bodies}. The morgue is asking questions.` : `Body count: ${bodies}, untouched for over a year.`,
+    bodies >= 100 ? `Body count: ${bodies.toLocaleString()}. The morgue is full.` : bodies >= 30 ? `Body count: ${bodies}. The morgue is asking questions.` : null,
     X.stars >= 50 ? `The dead hold ${X.stars.toLocaleString()} stars between them. Nobody visits.` : null,
     X.forks >= 20 ? `${X.forks.toLocaleString()} forks were taken from the dead. Organ donors.` : null,
     X.oldest ? `Oldest cold case: ${X.oldest.name}, untouched for ${span(X.oldest.quiet)}.` : null,
     X.archived ? `${X.archived === 1 ? 'One was' : X.archived + ' were'} laid to rest properly (archived). The rest were just left there.` : null,
     X.total > X.listedAll + 5 ? `Only the newest ${X.listedAll} were searched${skipped > 0 ? ` (${skipped} of them forks or empty, not counted)` : ''}. ${X.total - X.listedAll === 1 ? 'One more is' : (X.total - X.listedAll).toLocaleString() + ' more are'} still in the basement.` : null,
   ].filter(Boolean) : [];
-  const mo0 = dead.length ? profile(dead) : all.length ? [`No bodies found. Suspiciously clean.`, `${all.length} public project${all.length===1?'':'s'}, all still breathing.`, `Most recent sign of life: ${ago(Math.max(...all.map(c=>Date.parse(c.repo.pushed))))}.`, `The unit will keep an eye on this one.`] : [`No public projects. No bodies. No fingerprints.`, `Either innocent or very careful.`];
-  const mo = X ? big.concat(mo0.filter(l => !/^Total commits|^First known/.test(l))).slice(0, 6) : mo0;
+  const mo0 = dead.length ? profile(dead) : watch ? watch.habits : [`No public projects. No bodies. No fingerprints.`, `Either innocent or very careful.`];
+  const mo = X && !watch ? big.concat(mo0.filter(l => !/^First known/.test(l))).slice(0, 6) : mo0;
   out.innerHTML = `<section class="rap poster" aria-label="Wanted poster">
-    <div class="wanted">WANTED <span>for questioning</span></div>
+    ${watch ? `<div class="wanted poi">PERSON OF INTEREST <span>no bodies. yet.</span></div>` : `<div class="wanted">WANTED <span>for questioning</span></div>`}
     <div class="mug">${s.avatar ? `<img src="${s.avatar}" alt="">` : `<div class="noface">?</div>`}<div class="board">${esc(shown.toUpperCase())}</div></div>
-    <div><div class="k">In connection with</div><div class="count">${bodies.toLocaleString()}</div><div class="k">project death${bodies===1?'':'s'} · ${breathingN.toLocaleString()} still breathing</div>
-    <div class="k" style="margin-top:14px">Known M.O.</div>
+    ${watch ? `<div><div class="k">Next likely victim</div><div class="victim">${esc(watch.next.repo.name)}</div><div class="k">expected time of death: ${esc(dueDay(watch.due))} · ${breathingN.toLocaleString()} still breathing</div>`
+      : `<div><div class="k">In connection with</div><div class="count">${bodies.toLocaleString()}</div><div class="k">project death${bodies===1?'':'s'} · ${breathingN.toLocaleString()} still breathing</div>`}
+    <div class="k" style="margin-top:14px">${watch ? 'Suspicious habits' : 'Known M.O.'}</div>
     <ul class="priors">${mo.map(p=>`<li>${esc(p)}</li>`).join('')}</ul></div>
-    <div class="stamp">${bodies >= 50 ? 'MOST WANTED' : bodies ? (bodies >= 3 ? 'SERIAL OFFENDER' : 'PERSON OF INTEREST') : 'CLEAN RECORD'}</div></section>
+    <div class="stamp">${bodies >= 50 ? 'MOST WANTED' : bodies ? (bodies >= 3 ? 'SERIAL OFFENDER' : 'PERSON OF INTEREST') : watch ? 'UNDER WATCH' : 'CLEAN RECORD'}</div></section>
     ${s.hidden_owner ? '' : !(LIVE && AUTH_URL) ? `<div class="sharerow"><button id="mkcard">THIS IS ME: MAKE MY POSTER</button><span>Only make your own. Stamps from the court are included.</span></div>`
       : ME && ME.toLowerCase() === (s.user || '').toLowerCase() ? `<div class="sharerow"><button id="mkcard">MAKE MY WANTED POSTER</button><span>Signed in as ${esc(ME)}. Stamps from the court are included.</span></div>`
       : !ME ? `<div class="sharerow"><button class="ghost" id="signin2">IS THIS YOU? SIGN IN TO MAKE THE POSTER</button></div>` : ''}
@@ -1057,6 +1091,14 @@ function render(name){
   const th = thoughts(files);
   if (bodies >= 100) th.splice(0, th.length, {at: 0, text: `${bodies.toLocaleString()} files. I'm going to need a bigger desk.`}, ...th.filter(t => t.at > 0).slice(0,1));
   if (files.length) out.appendChild(stack(files, X && bodies > files.length ? `THE ${files.length} MOST NOTABLE OF ${bodies.toLocaleString()}` : 'THE VICTIMS', {thoughts: th, court: () => court(shown, dead, alive, out)}));
+  else if (watch) out.insertAdjacentHTML('beforeend', `<p class="thought">${breathingN.toLocaleString()} project${breathingN===1?'':'s'}, all still breathing. I don't trust it. I've already started the paperwork.</p>
+    <article class="folder pending"><div class="k">Case 1 · filed in advance</div><h3>${esc(watch.next.repo.name)}</h3>
+    <div class="meta"><div><div class="k">Born</div><div class="v">${esc(clock(watch.next.repo.created || watch.next.born.date).day)}</div></div>
+    <div><div class="k">Expected</div><div class="v">${esc(dueDay(watch.due))}</div></div><div><div class="k">Status</div><div class="v">Still breathing</div></div></div>
+    <ol class="clues"><li data-n="1">Last touched ${ago(Date.parse(watch.next.repo.pushed))}. We'll wait.</li>
+    <li data-n="2">${watch.short ? `It lived less than two days before going quiet. Three days of silence and it's ours. ${span(watch.left)} to go.` : `The rule: thirty days without a commit and it's ours. ${span(watch.left)} to go.`}</li>
+    <li data-n="3">${(watch.next.repo.total||watch.next.repo.commits.length).toLocaleString()} commit${(watch.next.repo.total||watch.next.repo.commits.length)===1?'':'s'} so far. Every victim on this desk had a last one.</li></ol>
+    <div class="ruling">Cause of death: pending. Commit to it and this file goes away.</div></article>`);
   else out.insertAdjacentHTML('beforeend', `<p class="thought">${all.length ? `${all.length} project${all.length===1?'':'s'}, all still breathing. I don't trust it.` : `Nothing here. You can't kill a project you never started.`}</p>`);
   if (alive.length) out.insertAdjacentHTML('beforeend', `<p class="alive">Still breathing: ${alive.slice(0,10).map(c=>`<b>${esc(c.repo.name)}</b> (last touched ${ago(Date.parse(c.repo.pushed))})`).join(', ')}${more ? `, and ${more} more` : ''}. For now.</p>`);
 }
