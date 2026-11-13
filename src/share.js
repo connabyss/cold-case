@@ -5,10 +5,10 @@ const SITE = 'connabyss.github.io/cold-case';
 function cardHash(s){ let h = 2166136261; for (const ch of String(s).toLowerCase()) { h ^= ch.charCodeAt(0); h = Math.imul(h, 16777619); } return h >>> 0; }
 function cardStamps(){ return [...document.querySelectorAll('.poster .bigstamp')].map(e => e.textContent); }
 async function shareCard(s, name, deadN, aliveN, mo){
-  try { await Promise.all(['900 80px "Big Shoulders Stencil Display"','700 20px "Big Shoulders Stencil Display"','400 20px "Courier Prime"','700 20px "Courier Prime"','italic 400 20px "Courier Prime"'].map(f => document.fonts.load(f))); } catch(e) {}
+  try { await Promise.all(['700 80px "Oswald"','600 20px "Oswald"','400 20px "Courier Prime"','700 20px "Courier Prime"','italic 400 20px "Courier Prime"'].map(f => document.fonts.load(f))); } catch(e) {}
   const W = 1200, Hh = 630, cv = document.createElement('canvas'); cv.width = W*2; cv.height = Hh*2;
   const g = cv.getContext('2d'); g.scale(2,2);
-  const DISP = '"Big Shoulders Stencil Display", Impact, sans-serif', TYPE = '"Courier Prime", "Courier New", monospace';
+  const DISP = '"Oswald", Impact, sans-serif', TYPE = '"Courier Prime", "Courier New", monospace';
   const INK = '#2a2118', SOFT = '#6b5a40', RED = '#a8261d', PAPER = '#dccca5', TAPE = '#e8c23a';
   // the same suspect always gets the same case number and the same specks of dirt
   const seed = cardHash(name); let r = seed || 1; const rnd = () => (r = Math.imul(r ^ (r >>> 15), 2246822519) ^ Math.imul(r ^ (r >>> 13), 3266489917), ((r >>>= 0) % 10000) / 10000);
@@ -36,7 +36,7 @@ async function shareCard(s, name, deadN, aliveN, mo){
   g.fillStyle = '#c6b48a'; g.fillRect(mx, my, ms, ms);
   if (s.avatar) { const img = new Image(); img.crossOrigin = 'anonymous'; img.src = s.avatar; await img.decode().catch(()=>{});
     if (img.naturalWidth) { g.save(); g.filter = 'grayscale(1) contrast(1.2) sepia(.15)'; g.drawImage(img, mx, my, ms, ms); g.restore(); } }
-  if (!s.avatar) { g.fillStyle = '#6b5a40'; g.font = `900 140px ${DISP}`; g.textAlign = 'center'; g.fillText('?', mx+ms/2, my+ms/2+50); }
+  if (!s.avatar) { g.fillStyle = '#6b5a40'; g.font = `700 140px ${DISP}`; g.textAlign = 'center'; g.fillText('?', mx+ms/2, my+ms/2+50); }
   g.save(); g.globalAlpha = .55; g.strokeStyle = '#111'; g.fillStyle = '#111'; g.font = `700 11px ${TYPE}`; g.textAlign = 'left'; g.lineWidth = 1;
   for (let i = 1; i < 6; i++) { const y = my + i*ms/6; g.beginPath(); g.moveTo(mx, y); g.lineTo(mx + (i%2 ? 14 : 24), y); g.stroke(); g.fillText(`${7-i}'`, mx+28, y+4); }
   g.restore();
@@ -49,7 +49,7 @@ async function shareCard(s, name, deadN, aliveN, mo){
 
   // right: the charge
   const cx = mx+ms+44, cw = px+pw-46 - cx; g.textAlign = 'left';
-  g.fillStyle = INK; g.font = `900 104px ${DISP}`; g.fillText('WANTED', cx-4, py+128);
+  g.fillStyle = INK; g.font = `700 104px ${DISP}`; g.fillText('WANTED', cx-4, py+128);
   const wW = g.measureText('WANTED').width;
   g.font = `700 20px ${DISP}`; g.fillStyle = SOFT; g.fillText('FOR THE ABANDONMENT OF', cx + wW + 18, py+92);
   g.fillText(deadN ? 'PUBLIC PROJECTS ON GITHUB' : 'NOTHING. YET.', cx + wW + 18, py+118);
@@ -57,13 +57,13 @@ async function shareCard(s, name, deadN, aliveN, mo){
   // the count is the headline
   const unit = deadN === 1 ? 'PROJECT' : 'PROJECTS';
   const numTxt = deadN ? deadN.toLocaleString() : 'ZERO';
-  let nsz = 120; g.font = `900 ${nsz}px ${DISP}`;
-  const unitW = () => { g.font = `900 ${Math.round(nsz*.42)}px ${DISP}`; const w = g.measureText(unit).width; g.font = `900 ${nsz}px ${DISP}`; return w; };
-  while (g.measureText(numTxt).width + 20 + unitW() > cw - 150 && nsz > 60) { nsz -= 4; g.font = `900 ${nsz}px ${DISP}`; }
+  let nsz = 120; g.font = `700 ${nsz}px ${DISP}`;
+  const unitW = () => { g.font = `700 ${Math.round(nsz*.42)}px ${DISP}`; const w = g.measureText(unit).width; g.font = `700 ${nsz}px ${DISP}`; return w; };
+  while (g.measureText(numTxt).width + 20 + unitW() > cw - 150 && nsz > 60) { nsz -= 4; g.font = `700 ${nsz}px ${DISP}`; }
   const ny = py+150+nsz*.92;
   g.fillStyle = RED; g.fillText(numTxt, cx-4, ny); const nW = g.measureText(numTxt).width;
-  g.font = `900 ${Math.round(nsz*.42)}px ${DISP}`; g.fillText(deadN ? unit : 'BODIES', cx + nW + 14, ny - nsz*.36);
-  g.fillStyle = SOFT; g.font = `700 ${Math.round(nsz*.22)}px ${DISP}`;
+  g.font = `700 ${Math.round(nsz*.42)}px ${DISP}`; g.fillText(deadN ? unit : 'BODIES', cx + nW + 14, ny - nsz*.36);
+  g.fillStyle = SOFT; g.font = `600 ${Math.round(nsz*.22)}px ${DISP}`;
   g.fillText(deadN ? 'LEFT FOR DEAD' : 'SUSPICIOUSLY CLEAN', cx + nW + 16, ny);
   g.font = `italic 400 17px ${TYPE}`; g.fillStyle = SOFT;
   g.fillText(aliveN ? `${aliveN.toLocaleString()} still breathing. For now.` : deadN ? 'None left breathing.' : 'The unit will keep an eye on this one.', cx, ny + 30);
@@ -84,14 +84,14 @@ async function shareCard(s, name, deadN, aliveN, mo){
 
   // the court's stamps, each in a spot where it covers no words
   const stamp = (word, x, y, rot, size) => { g.save(); g.translate(x,y); g.rotate(rot); g.globalAlpha = .86; g.globalCompositeOperation = 'multiply'; g.strokeStyle = g.fillStyle = RED;
-    g.font = `900 ${size}px ${DISP}`; g.textAlign = 'center'; g.textBaseline = 'middle'; const w = g.measureText(word).width + size*.5;
+    g.font = `700 ${size}px ${DISP}`; g.textAlign = 'center'; g.textBaseline = 'middle'; const w = g.measureText(word).width + size*.5;
     g.lineWidth = Math.max(4, size/12); g.strokeRect(-w/2, -size*.62, w, size*1.2); g.fillText(word, 0, 3);
     // worn ink: knock a few holes out of the stamp
     g.globalCompositeOperation = 'source-over'; g.globalAlpha = 1; g.fillStyle = PAPER;
     for (let i = 0; i < 40; i++) g.fillRect((rnd()-.5)*w, (rnd()-.5)*size*1.2, 1+rnd()*3, 1+rnd()*2);
     g.restore(); };
   const rank = document.querySelector('.poster .stamp')?.textContent || (deadN >= 50 ? 'MOST WANTED' : deadN >= 3 ? 'SERIAL OFFENDER' : deadN ? 'PERSON OF INTEREST' : 'CLEAN RECORD');
-  let rs = 30; g.font = `900 ${rs}px ${DISP}`; while (g.measureText(rank).width + rs*.5 > 200 && rs > 18) g.font = `900 ${--rs}px ${DISP}`;
+  let rs = 30; g.font = `700 ${rs}px ${DISP}`; while (g.measureText(rank).width + rs*.5 > 200 && rs > 18) g.font = `700 ${--rs}px ${DISP}`;
   stamp(rank, px+pw-140, py+66, .1, rs);
   if (guilty) stamp('GUILTY', px+pw-170, ny+100, -.22, 72);
   if (live.includes('IN DENIAL')) stamp('IN DENIAL', px+pw-170, ny - nsz*.5, .14, 40);
@@ -101,7 +101,7 @@ async function shareCard(s, name, deadN, aliveN, mo){
   // under the poster: where to get your own
   g.textBaseline = 'middle';
   g.save(); g.translate(0, 572); g.rotate(-.01); g.fillStyle = TAPE; g.fillRect(-20, -22, W+40, 44);
-  g.fillStyle = '#111'; g.textAlign = 'left'; g.font = `900 22px ${DISP}`; g.fillText('COLD CASE UNIT', 40, 1);
+  g.fillStyle = '#111'; g.textAlign = 'left'; g.font = `700 22px ${DISP}`; g.fillText('COLD CASE UNIT', 40, 1);
   g.textAlign = 'center'; g.font = `700 19px ${TYPE}`; g.fillText('Somebody killed all these projects. The commit log says it was you.', W/2 + 40, 1);
   g.restore();
   g.fillStyle = '#ece7da'; g.textAlign = 'center'; g.font = `700 17px ${TYPE}`;

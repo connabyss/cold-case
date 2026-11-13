@@ -1,22 +1,60 @@
-<div class="tape" aria-hidden="true">CRIME SCENE · DO NOT CROSS · CRIME SCENE · DO NOT CROSS · CRIME SCENE · DO NOT CROSS · CRIME SCENE · DO NOT CROSS · CRIME SCENE · DO NOT CROSS</div>
+<nav class="topnav">
+  <a class="brand" href="./" aria-label="Cold Case Unit, start over">
+    <svg viewBox="0 0 40 44" aria-hidden="true"><defs><linearGradient id="bz" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f1d690"/><stop offset=".55" stop-color="#c8a35a"/><stop offset="1" stop-color="#8a6a2e"/></linearGradient></defs>
+      <path d="M20 1.5 37 7.5v12.2C37 31 29.6 38.6 20 42.5 10.4 38.6 3 31 3 19.7V7.5Z" fill="url(#bz)" stroke="#5a431b" stroke-width="1.2"/>
+      <path d="M20 6.2 33 10.8v9.3c0 8.6-5.5 14.6-13 17.8-7.5-3.2-13-9.2-13-17.8v-9.3Z" fill="none" stroke="#6e5222" stroke-width=".9" opacity=".7"/>
+      <path d="m20 12.5 2.5 5.1 5.6.8-4.05 3.95.96 5.6L20 25.3l-5 2.65.96-5.6L11.9 18.4l5.6-.8Z" fill="#6e5222"/></svg>
+    <span><b>Cold Case Unit</b><small>GitHub Division</small></span></a>
+  <div class="topbar"><span id="who-am-i"></span><button class="ghost" type="button" id="snd" aria-pressed="true">♪ Sound on</button></div>
+</nav>
 <div class="wrap">
-<header>
-  <div class="eyebrow">COLD CASE UNIT · GITHUB DIVISION</div>
-  <h1>Somebody killed all these projects.</h1>
-  <p class="lede">The commit log says it was you. Type a GitHub username and we'll open a file on every project its owner walked away from, built only from facts in the public history.</p>
-  <form id="intake">
-    <label class="sr" for="who">GitHub username</label>
-    <input id="who" name="who" placeholder="github username" autocomplete="off" spellcheck="false" value="connabyss">
-    <button type="submit">OPEN THE CASE</button>
-  </form>
+<header class="hero">
+  <div class="hero-copy">
+    <div class="eyebrow">Case files on abandoned code</div>
+    <h1>Somebody <em>killed</em> all these projects.</h1>
+    <p class="lede">The commit log says it was you. Type a GitHub username and we'll open a file on every project its owner walked away from, built only from facts in the public history.</p>
+    <form id="intake" class="intake">
+      <div class="intake-head"><span>Form CC-1 · Request to open a file</span><span class="red">Urgent</span></div>
+      <label for="who">Name of the suspect (a GitHub username)</label>
+      <div class="intake-row"><div class="field"><span aria-hidden="true">@</span><input id="who" name="who" placeholder="username" autocomplete="off" autocapitalize="off" spellcheck="false" value="connabyss"></div>
+      <button type="submit">Open the case</button></div>
+    </form>
 <!--ONFILE--><div class="onfile">On file in this preview:
     <button class="ghost" type="button" data-open="connabyss">connabyss</button>
     <button class="ghost" type="button" data-open="#suspect">a repeat offender, name withheld</button>
     <button class="ghost" type="button" data-open="#strangers">10 strangers, names withheld</button>
   </div><!--/ONFILE-->
-  <div class="topbar"><span id="who-am-i"></span><button class="ghost" type="button" id="snd" aria-pressed="true">♪ Sound on</button></div>
-  <div class="notice" id="notice" role="status"></div>
+    <div class="notice" id="notice" role="status"></div>
+  </div>
+  <div class="evidence" aria-hidden="true">
+    <div class="ev-tape two tape">Crime scene · Do not cross · Crime scene · Do not cross · Crime scene · Do not cross · Crime scene · Do not cross</div>
+    <div class="ev-folder"><div class="ev-tab">CASE 0001 · EXAMPLE</div>
+      <div class="ev-paper"><div class="ev-k">Victim</div><div class="ev-name">ghosts-of-<wbr>bugs-past</div>
+        <div class="ev-grid"><div><span>Lived</span><b>58 minutes</b></div><div><span>Body count</span><b>7 commits</b></div></div>
+        <p class="ev-typed">“Don't stay dead,” said the README. It stayed dead.</p>
+        <div class="ev-stamp">COLD</div></div></div>
+    <figure class="ev-photo">
+      <svg viewBox="0 0 200 170" role="presentation"><defs><radialGradient id="flo" cx=".5" cy=".42" r=".75"><stop offset="0" stop-color="#4a4740"/><stop offset="1" stop-color="#15161a"/></radialGradient>
+        <filter id="chk"><feTurbulence type="fractalNoise" baseFrequency="1.6" numOctaves="1" seed="3"/><feDisplacementMap in="SourceGraphic" scale="2.2"/></filter></defs>
+        <rect width="200" height="170" fill="url(#flo)"/>
+        <g stroke="rgba(0,0,0,.35)" stroke-width="1"><path d="M0 40h200M0 85h200M0 130h200"/><path d="M60 0v40M150 40v45M30 85v45M120 85v45M80 130v40M170 130v40"/></g>
+        <g fill="none" stroke="#f1ede2" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" filter="url(#chk)" opacity=".92">
+          <circle cx="100" cy="36" r="12"/>
+          <path d="M93 50 80 56 64 42 58 28 50 31 56 48 76 66 84 72 85 108 70 148 79 152 99 116h3l21 36 8-5-16-39 1-36 14-2 16 12 6 16 8-3-7-19-19-16-27-10Z"/></g>
+        <g transform="translate(24 118)"><path d="M0 14 8 0l8 14Z" fill="#f0c534"/><text x="8" y="12.5" font-size="7" text-anchor="middle" font-family="Oswald,Arial" font-weight="700" fill="#15120a">1</text></g>
+        <g transform="translate(164 34)"><path d="M0 14 8 0l8 14Z" fill="#f0c534"/><text x="8" y="12.5" font-size="7" text-anchor="middle" font-family="Oswald,Arial" font-weight="700" fill="#15120a">2</text></g>
+        <g transform="translate(148 132) rotate(-12)"><rect width="34" height="20" rx="2" fill="#2b2d33" stroke="#0c0d10"/><rect x="3" y="3" width="28" height="12" fill="#3d6f8f" opacity=".55"/></g>
+      </svg>
+      <figcaption>Scene of the crime</figcaption></figure>
+    <div class="ev-tag"><small>EXHIBIT A</small>Last words:<br>“Hand check of the<br>first real runs”</div>
+    <div class="ev-tape tape">Crime scene · Do not cross · Crime scene · Do not cross · Crime scene · Do not cross · Crime scene · Do not cross</div>
+  </div>
 </header>
+<ol class="steps" aria-label="How it works">
+  <li><span class="num">1</span><div><b>Name a suspect</b><span>Any GitHub username. Yours is the most fun.</span></div></li>
+  <li><span class="num">2</span><div><b>We pull the record</b><span>Every quiet project gets a case file, read live from the public history.</span></div></li>
+  <li><span class="num">3</span><div><b>Face the court</b><span>Plead guilty, or promise to finish it tomorrow. The court remembers.</span></div></li>
+</ol>
 <main id="out"><!--INTRO--><!--/INTRO--></main>
 <footer><!--FOOT-->Preview. Every line comes from public GitHub data pulled on Nov 4, 2026: commit times and messages, README text, file counts and stars. Live lookups for any username need the real website, which this preview isn't yet.<!--/FOOT--></footer>
 </div>
@@ -320,6 +358,7 @@ async function openSuspect(name, fresh){
 }
 function render(name){
   const out = document.getElementById('out'); const note = document.getElementById('notice'); note.textContent = '';
+  document.body.classList.add('has-case');
   if (name === '#strangers') {
     const cs = DATA.strangers.map(r => analyze(r, null));
     out.innerHTML = ''; out.appendChild(stack(cs, `${cs.length} STRANGERS · OWNERS WITHHELD`, {thoughts: thoughts(cs)}));

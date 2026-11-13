@@ -63,6 +63,21 @@ const SPAN = /\b\d[\d,.]*\s(second|minute|hour|day|month|year)s?\b/g;
     check(!/\b3 public projects?\b/.test(res[0]) || /3 STILL BREATHING/i.test(res[0]), 'clean record counts agree');
     check(/\b7\b PROJECT DEATHS · 4 STILL BREATHING/i.test(res[1]), 'an 11-project account counts quick deaths, not only year-old ones');
   }
+  // 11-13 polish: the page fits a phone, the hero steps aside for a case, and "tomorrow" doesn't turn the page into a row
+  {
+    const check = (ok, why) => { checked++; if (!ok) { fails++; console.log('FAIL layout: ' + why); } };
+    const m = await b.newPage({viewport: {width: 390, height: 844}, reducedMotion: 'reduce'});
+    await m.route('**/*', r => r.request().url().startsWith('file:') ? r.continue() : r.abort());
+    await m.goto('file://' + page);
+    const wide = () => m.evaluate(() => document.documentElement.scrollWidth);
+    check(await wide() <= 390, 'front page is wider than a phone');
+    await m.evaluate(f => { DATA.suspects.connabyss = f; render('connabyss'); }, fixtures.find(f => f.user === 'connabyss'));
+    check(await m.evaluate(() => getComputedStyle(document.querySelector('.evidence')).display === 'none'), 'the hero evidence still shows over an open case');
+    check(await wide() <= 390, 'case page is wider than a phone');
+    await m.evaluate(() => { court('connabyss', [{repo: {name: 'x', commits: [1]}, born: {date: '2026-01-01T00:00:00Z'}}], [], document.getElementById('out')); document.querySelector('[data-plea="tomorrow"]').click(); });
+    check(await m.evaluate(() => document.body.classList.contains('reopen') && getComputedStyle(document.body).display === 'block'), '"tomorrow" changed the page layout (body.reopen picked up p.reopen styles)');
+    await m.close();
+  }
   await b.close();
   console.log(fails ? `${fails} problem(s) in ${checked} cases` : `ok: ${checked} cases`);
   process.exit(fails ? 1 : 0);
