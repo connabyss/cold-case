@@ -20,8 +20,9 @@ Live at https://connabyss.github.io/cold-case/.
 
 ## Deploying
 
-- **Merging to `main` deploys.** GitHub Pages serves `main`, so a merge is live within a minute or two.
-  That is why only connabyss merges.
+- **Merging into the default branch deploys.** GitHub Pages serves the repo's default branch (today it is
+  `claude/project-thread-cx4blx`; there is no `main`), so a merge is live within a minute or two.
+  Open PRs against the default branch, and only connabyss merges.
 
 ## Rules (from connabyss)
 
