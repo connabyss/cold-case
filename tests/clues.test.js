@@ -71,6 +71,8 @@ const SPAN = /\b\d[\d,.]*\s(second|minute|hour|day|month|year)s?\b/g;
     await m.goto('file://' + page);
     const wide = () => m.evaluate(() => document.documentElement.scrollWidth);
     check(await wide() <= 390, 'front page is wider than a phone');
+    // Google Search Console checks this tag to keep the site verified; dropping it unverifies the site
+    check(await m.evaluate(() => (document.querySelector('meta[name="google-site-verification"]') || {}).content === 'HR18TJ5FgrVK-AMp0a-dwnOg-Um8gQ7yWV6TlCtZwtY'), 'the Google Search Console verification tag is missing');
     await m.evaluate(f => { DATA.suspects.connabyss = f; render('connabyss'); }, fixtures.find(f => f.user === 'connabyss'));
     check(await m.evaluate(() => getComputedStyle(document.querySelector('.evidence')).display === 'none'), 'the hero evidence still shows over an open case');
     check(await wide() <= 390, 'case page is wider than a phone');
