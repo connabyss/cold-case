@@ -10,151 +10,354 @@
 <meta property="og:image" content="https://connabyss.github.io/cold-case/og.png">
 <meta property="og:image:width" content="1280">
 <meta property="og:image:height" content="640">
-<meta property="og:image:alt" content="Crime scene tape around the words: Somebody killed all these projects. The commit log says it was you.">
+<meta property="og:image:alt" content="Somebody killed all these projects: a case folder, a crime-scene photo and crime-scene tape on a detective's desk at night.">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="theme-color" content="#0d0f14">
+<meta name="theme-color" content="#0b0d12">
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Stencil+Display:wght@700;900&family=Courier+Prime:ital,wght@0,400;0,700;1,400&display=swap">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Courier+Prime:ital,wght@0,400;0,700;1,400&family=Oswald:wght@500;600;700&family=Playfair+Display:ital,wght@0,700;0,900;1,700;1,900&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&display=swap">
 <style>
-/* Layout: a detective's desk at night. Intake form, then the suspect's rap sheet, then one manila folder per dead project. */
+/* A detective's desk at night, under one lamp. Real materials: manila folders, aged poster paper, rubber-stamp ink,
+   brass, crime-scene tape. Type: Playfair for headlines, Source Serif for the narrator, Courier only for typed evidence,
+   Oswald for stamps and buttons. */
 :root{
-  --night:#0d0f14; --desk:#161a22; --manila:#dccca5; --manila-edge:#c6b48a; --ink:#2a2118; --ink-soft:#6b5a40;
-  --tape:#e8c23a; --stamp:#a8261d; --chalk:#ece7da; --dim:#8a8778;
-  --display:"Big Shoulders Stencil Display", Impact, "Arial Narrow", sans-serif;
+  --night:#0b0d12; --desk:#15110d; --lamp:255,196,118; --brass:#c8a35a; --brass-hi:#e7c886;
+  --paper:#efe4c8; --manila:#e3d09f; --manila-2:#d6c08b; --manila-edge:#b99c60; --ink:#231a11; --ink-soft:#6b573a;
+  --stamp:#a5231a; --oxblood:#7e1b13; --chalk:#efe8d8; --dim:#a39b86; --line:rgba(239,232,216,.14); --tape:#f0c534;
+  --display:"Playfair Display", Georgia, "Times New Roman", serif;
+  --serif:"Source Serif 4", Georgia, "Times New Roman", serif;
   --type:"Courier Prime", "Courier New", Courier, monospace;
+  --cond:"Oswald", "Arial Narrow", Impact, sans-serif;
+  --grain:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .32 0 0 0 0 .22 0 0 0 0 .1 0 0 0 .55 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  --ink-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='m'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.7' numOctaves='2' seed='4'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 -3 2.05'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23m)'/%3E%3C/svg%3E");
   color-scheme:dark;
 }
-body{background:var(--night);color:var(--chalk);font-family:var(--type);font-size:16px;line-height:1.5;
-  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:0 64px}
-.wrap{max-width:1040px;margin:0 auto}
-.tape{background:var(--tape);color:#111;font:900 15px/1 var(--display);letter-spacing:.35em;padding:9px 0;white-space:nowrap;overflow:hidden;
-  margin-inline:calc(-1 * max(16px,env(safe-area-inset-left,0px)));transform:rotate(-1.2deg);margin-top:22px}
-header{padding-block:40px 18px;display:grid;gap:10px}
-.eyebrow{font:700 14px var(--display);letter-spacing:.3em;color:var(--tape)}
-h1{font:900 clamp(44px,8vw,92px)/.92 var(--display);letter-spacing:.01em;margin:0;text-wrap:balance}
-.lede{color:var(--dim);max-width:60ch;margin:0}
-form{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}
+*,*::before,*::after{box-sizing:border-box}
+html{background:var(--night);overflow-x:clip}
+body{margin:0;min-height:100vh;color:var(--chalk);font:400 17px/1.55 var(--serif);
+  background:
+    radial-gradient(ellipse 900px 620px at 18% -80px, rgba(var(--lamp),.20), rgba(var(--lamp),.06) 45%, transparent 70%),
+    radial-gradient(ellipse 1200px 800px at 110% 30%, rgba(40,60,90,.18), transparent 70%),
+    linear-gradient(180deg,#0e1016 0%, #0b0d12 40%, #0a0b0f 100%);
+  background-attachment:fixed;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:0 72px;
+  -webkit-font-smoothing:antialiased;overflow-x:clip}
+.wrap{max-width:1120px;margin:0 auto;position:relative}
+::selection{background:var(--stamp);color:var(--paper)}
+
+/* top bar: badge on the left, sign in + sound on the right */
+.topnav{max-width:1120px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:18px 0 0;position:relative;z-index:3}
+.brand{display:flex;align-items:center;gap:12px;color:var(--chalk);text-decoration:none}
+.brand svg{width:40px;height:44px;flex:none;filter:drop-shadow(0 3px 6px rgba(0,0,0,.6))}
+.brand b{display:block;font:700 19px/1 var(--display);letter-spacing:.01em}
+.brand small{display:block;font:500 11px/1 var(--cond);letter-spacing:.2em;text-transform:uppercase;color:var(--brass);margin-top:5px}
+.topbar{display:flex;gap:8px;align-items:center;color:var(--dim);font-size:14px;flex-wrap:wrap;justify-content:flex-end}
+.topbar b{color:var(--chalk)}
+.topbar button{font-size:13px;padding:7px 12px}
+
+/* crime-scene tape, a real strip of plastic */
+.tape{position:relative;background:linear-gradient(180deg,#f6d34a 0%,var(--tape) 45%,#d8ad1f 100%);color:#15120a;
+  font:700 14px/1 var(--cond);letter-spacing:.14em;text-transform:uppercase;padding:9px 0;white-space:nowrap;overflow:hidden;
+  box-shadow:0 6px 16px rgba(0,0,0,.55), inset 0 1px 0 rgba(255,255,255,.35)}
+
+/* hero */
+.hero{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,.95fr);gap:48px;align-items:center;padding:52px 0 26px;position:relative}
+.hero::before{content:"";position:absolute;top:-40px;bottom:0;left:calc(50% - 50vw);right:calc(50% - 50vw);pointer-events:none;z-index:-1;opacity:.5;
+  background:repeating-linear-gradient(-14deg, transparent 0 44px, rgba(0,0,0,.42) 44px 70px);
+  -webkit-mask:radial-gradient(ellipse 70% 80% at 30% 20%, #000 10%, transparent 75%);mask:radial-gradient(ellipse 70% 80% at 30% 20%, #000 10%, transparent 75%)}
+.eyebrow{display:flex;align-items:center;gap:12px;font:500 12px/1 var(--cond);letter-spacing:.24em;text-transform:uppercase;color:var(--brass)}
+.eyebrow::before{content:"";width:34px;height:1px;background:var(--brass)}
+h1{font:900 clamp(46px,6.6vw,86px)/.98 var(--display);letter-spacing:-.015em;margin:16px 0 0;text-wrap:balance;color:#f5eedd;
+  text-shadow:0 2px 30px rgba(var(--lamp),.12)}
+h1 em{font-style:italic;color:#e0473a;font-weight:900}
+.lede{color:#c9c1ad;max-width:52ch;margin:20px 0 0;font-size:19px;line-height:1.55}
+
+/* the intake form: a slip of paper on the desk */
+.intake{margin-top:30px;background:var(--paper);background-image:var(--grain),linear-gradient(180deg,#f3e9cf,#e8dab6);color:var(--ink);
+  padding:18px 20px 20px;border-radius:2px;box-shadow:0 22px 50px rgba(0,0,0,.6), 0 2px 0 rgba(255,255,255,.4) inset;position:relative;transform:rotate(-.6deg);max-width:600px}
+.intake-head{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;font:600 11px/1 var(--cond);letter-spacing:.16em;text-transform:uppercase;color:var(--ink-soft);
+  border-bottom:1.5px solid var(--ink);padding-bottom:9px}
+.intake-head .red{color:var(--stamp)}
+.intake label{display:block;font:italic 400 15px/1.3 var(--serif);color:var(--ink-soft);margin:14px 0 4px}
+.intake-row{display:flex;gap:12px;align-items:stretch;flex-wrap:wrap}
+.field{flex:1 1 240px;min-width:0;display:flex;align-items:center;border-bottom:2px solid var(--ink)}
+.field span{font:700 22px var(--type);color:var(--ink-soft);padding-right:4px}
+.intake input{flex:1;min-width:0;background:transparent;border:0;color:var(--ink);font:700 22px var(--type);padding:10px 2px;border-radius:0}
+.intake input::placeholder{color:#a7946d;font-weight:400}
+.intake input:focus-visible{outline:none}
+.field:focus-within{border-bottom-color:var(--stamp);box-shadow:0 2px 0 var(--stamp)}
 label.sr{position:absolute;left:-9999px}
-input{flex:1 1 240px;min-width:0;background:var(--desk);border:1px solid #2c3240;color:var(--chalk);font:400 18px var(--type);padding:12px 14px;border-radius:2px}
-input:focus-visible,button:focus-visible{outline:2px solid var(--tape);outline-offset:2px}
-button{background:var(--tape);color:#111;border:0;font:900 18px var(--display);letter-spacing:.12em;padding:12px 22px;cursor:pointer;border-radius:2px}
-button.ghost{background:transparent;color:var(--chalk);border:1px solid #3a4150;font-size:15px;padding:8px 14px}
-.onfile{display:flex;gap:8px;flex-wrap:wrap;align-items:center;color:var(--dim);font-size:14px;margin-top:4px}
-.notice{color:var(--tape);font-size:14px;min-height:1.5em}
-/* rap sheet */
-.rap{margin-top:34px;background:var(--manila);color:var(--ink);display:grid;grid-template-columns:150px 1fr;gap:22px;padding:24px;position:relative;box-shadow:0 18px 50px rgba(0,0,0,.6)}
-.rap .mug{display:grid;gap:6px;align-content:start}
-.rap img{width:150px;height:150px;object-fit:cover;filter:grayscale(1) contrast(1.15);border:3px solid var(--ink)}
-.board{background:var(--ink);color:var(--manila);font:700 13px var(--type);text-align:center;padding:4px;letter-spacing:.08em}
-.rap h2{font:900 34px/1 var(--display);margin:0 0 4px;letter-spacing:.04em}
-.k{font-size:12px;letter-spacing:.18em;color:var(--ink-soft);text-transform:uppercase}
-.priors{display:grid;gap:6px;margin:10px 0 0;padding:0;list-style:none}
-.priors li{border-top:1px dashed var(--manila-edge);padding-top:6px}
-.stamp{position:absolute;right:22px;top:18px;border:4px solid var(--stamp);color:var(--stamp);font:900 26px/1 var(--display);padding:6px 12px;transform:rotate(8deg);letter-spacing:.1em;opacity:.85}
-/* folders */
+
+/* buttons: oxblood with a raised edge; ghost buttons are brass outlines */
+button,.btnlink{appearance:none;background:linear-gradient(180deg,#b3291f,var(--oxblood));color:#fbefd9;border:0;border-radius:3px;cursor:pointer;
+  font:600 16px/1 var(--cond);letter-spacing:.1em;text-transform:uppercase;padding:14px 22px;text-decoration:none;display:inline-block;
+  box-shadow:0 1px 0 rgba(255,255,255,.22) inset, 0 -2px 0 rgba(0,0,0,.25) inset, 0 6px 16px rgba(0,0,0,.4);transition:transform .12s, filter .12s}
+button:hover,.btnlink:hover{filter:brightness(1.1)}
+button:active{transform:translateY(1px)}
+button:focus-visible,.btnlink:focus-visible,input:focus-visible{outline:2px solid var(--brass-hi);outline-offset:3px}
+button.ghost,.btnlink.ghostlink{background:rgba(0,0,0,.18);color:var(--chalk);border:1px solid rgba(200,163,90,.55);box-shadow:none;font-size:14px;padding:9px 14px}
+button.ghost:hover{background:rgba(200,163,90,.12);border-color:var(--brass-hi)}
+.intake button[type=submit]{flex:0 0 auto;padding:16px 24px}
+.onfile{display:flex;gap:10px;flex-wrap:wrap;align-items:center;color:var(--dim);font:italic 400 15px var(--serif);margin-top:22px}
+.onfile button.ghost{font-family:var(--type);text-transform:none;letter-spacing:0;font-weight:700;font-size:15px}
+.notice{color:var(--brass-hi);font:italic 400 16px var(--serif);min-height:1.5em;margin-top:10px}
+
+/* evidence on the desk: a folder, a polaroid of the scene, a tag, tape */
+.evidence{position:relative;height:500px;max-width:520px;width:100%;justify-self:center}
+.evidence::before{content:"";position:absolute;inset:6% -10% -4% -6%;background:radial-gradient(ellipse at 50% 45%, rgba(var(--lamp),.16), transparent 65%);z-index:-1}
+.ev-folder{position:absolute;left:0;top:15%;width:76%;transform:rotate(-3deg);filter:drop-shadow(0 26px 34px rgba(0,0,0,.65));z-index:1}
+.ev-tab{display:inline-block;margin-left:22px;background:var(--manila-2);background-image:var(--grain);color:var(--ink-soft);font:600 11px/1 var(--cond);letter-spacing:.18em;
+  padding:9px 18px 8px;border-radius:6px 6px 0 0}
+.ev-paper{background:var(--manila);background-image:var(--grain),linear-gradient(160deg,#ead8aa,#d9c38e);color:var(--ink);padding:24px 24px 26px;border-radius:2px 4px 4px 4px;position:relative;overflow:hidden}
+.ev-k{font:600 11px/1 var(--cond);letter-spacing:.18em;text-transform:uppercase;color:var(--ink-soft)}
+.ev-name{font:900 32px/1.02 var(--display);margin:6px 0 14px;max-width:62%}
+.ev-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;border-block:1px solid rgba(35,26,17,.3);padding:10px 0;margin-bottom:14px}
+.ev-grid span{display:block;font:600 10px/1 var(--cond);letter-spacing:.18em;text-transform:uppercase;color:var(--ink-soft)}
+.ev-grid b{font:700 17px/1.3 var(--type)}
+.ev-typed{font:400 15px/1.5 var(--type);margin:0;max-width:24ch}
+.ev-stamp{position:absolute;right:18px;bottom:22px;transform:rotate(-11deg);border:4px solid var(--stamp);color:var(--stamp);border-radius:4px;
+  font:700 30px/1 var(--cond);letter-spacing:.1em;padding:6px 14px;opacity:.88;-webkit-mask:var(--ink-mask);mask:var(--ink-mask)}
+.ev-photo{position:absolute;right:0;top:0;width:40%;margin:0;background:#f4f1e8;padding:10px 10px 34px;transform:rotate(7deg);box-shadow:0 18px 30px rgba(0,0,0,.6);z-index:2}
+.ev-photo svg{display:block;width:100%;height:auto;background:#1b1d22}
+.ev-photo figcaption{position:absolute;left:0;right:0;bottom:8px;text-align:center;font:italic 400 14px var(--serif);color:#444}
+.ev-photo::before{content:"";position:absolute;left:50%;top:-12px;width:70px;height:22px;margin-left:-35px;background:rgba(240,232,205,.55);transform:rotate(-4deg);box-shadow:0 1px 2px rgba(0,0,0,.2)}
+.ev-tag{position:absolute;right:6%;bottom:2%;z-index:3;background:#efe6cf;background-image:var(--grain);color:var(--ink);font:700 13px/1.25 var(--type);padding:12px 16px 12px 28px;
+  transform:rotate(-8deg);clip-path:polygon(14px 0,100% 0,100% 100%,14px 100%,0 50%);box-shadow:0 10px 18px rgba(0,0,0,.5)}
+.ev-tag::before{content:"";position:absolute;left:12px;top:50%;width:8px;height:8px;margin-top:-4px;border-radius:50%;background:var(--night)}
+.ev-tag small{display:block;font:600 10px/1 var(--cond);letter-spacing:.18em;color:var(--stamp);margin-bottom:4px}
+.ev-tape{position:absolute;left:-4%;right:-8%;bottom:13%;transform:rotate(-9deg);z-index:0;clip-path:polygon(0 8%,1.2% 30%,.3% 50%,1.4% 72%,0 92%,100% 100%,98.8% 70%,99.7% 50%,98.6% 28%,100% 0)}
+.ev-tape.two{bottom:6%;transform:rotate(6deg)}
+
+/* how it works: three numbered steps */
+.steps{list-style:none;margin:30px 0 0;padding:26px 0 0;border-top:1px solid var(--line);display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:28px}
+.steps li{display:grid;grid-template-columns:auto 1fr;gap:14px;align-items:start}
+.steps .num{font:900 italic 40px/1 var(--display);color:var(--brass)}
+.steps b{display:block;font:700 19px/1.25 var(--display);color:var(--chalk)}
+.steps span{color:var(--dim);font-size:15px}
+body.has-case .evidence,body.has-case .steps,body.has-case .lede{display:none}
+body.has-case .hero{grid-template-columns:1fr;padding-top:30px}
+body.has-case h1{font-size:clamp(34px,4.6vw,54px)}
+body.has-case .hero{padding-bottom:0}
+body.has-case .rap{margin-top:28px}
+/* desktop case view: the files on the left, the desk notes (compare, follows) on the right */
+@media (min-width:1000px){
+  #out{display:grid;grid-template-columns:minmax(0,1fr) 330px;column-gap:48px;align-items:start;grid-auto-flow:row dense}
+  #out > *{grid-column:1/-1}
+  #out > .stack,#out > .thought,#out > .folder,#out > .court,#out > .alive{grid-column:1}
+  #out > .social{grid-column:2;grid-row:span 4;margin-top:56px;padding:22px;border:1px solid rgba(200,163,90,.35);border-radius:4px;background:rgba(255,255,255,.025);position:sticky;top:20px}
+  #out > .social input{flex-basis:100%}
+}
+
+/* shared bits */
+.k{font:600 11px/1.3 var(--cond);letter-spacing:.16em;color:var(--ink-soft);text-transform:uppercase}
+.section-k{display:flex;align-items:center;gap:14px;margin-top:56px;font:700 italic clamp(26px,3.4vw,34px)/1.1 var(--display);color:var(--chalk);text-transform:none;letter-spacing:0}
+.section-k::after{content:"";flex:1;height:1px;background:linear-gradient(90deg,rgba(200,163,90,.6),transparent)}
+.thought{font:italic 400 19px/1.5 var(--serif);color:#e9d9b4;max-width:60ch;margin:18px 0 0;padding-left:16px;border-left:2px solid var(--brass)}
+.thought::before{content:none}
+#out{scroll-margin-top:16px}
+
+/* the wanted poster: aged broadsheet pinned to the wall */
+.rap{margin-top:40px;background:var(--paper);background-image:var(--grain),radial-gradient(ellipse at 50% 40%, #f2e8cc 30%, #dccaa0 100%);color:var(--ink);
+  display:grid;grid-template-columns:180px 1fr;gap:26px;padding:30px;position:relative;box-shadow:0 30px 70px rgba(0,0,0,.7), 0 0 0 1px rgba(0,0,0,.2)}
+.rap::before,.rap::after{content:"";position:absolute;top:12px;width:16px;height:16px;border-radius:50%;
+  background:radial-gradient(circle at 35% 30%, #f07a6c, #a5231a 55%, #5e120c);box-shadow:0 3px 4px rgba(0,0,0,.5);z-index:2}
+.rap::before{left:14px}.rap::after{right:14px}
+.rap .mug{display:grid;gap:8px;align-content:start;position:relative}
+.rap img,.noface{width:180px;height:180px;object-fit:cover;filter:grayscale(1) sepia(.25) contrast(1.15);border:3px solid var(--ink);display:block;
+  background:repeating-linear-gradient(180deg, #d9cfb6 0 17px, rgba(35,26,17,.35) 17px 18px)}
+.board{background:#17130e;color:#efe6cf;font:700 14px/1.2 var(--type);text-align:center;padding:7px 6px;letter-spacing:.06em;overflow-wrap:anywhere;box-shadow:0 3px 0 rgba(0,0,0,.25)}
+.rap h2{font:900 34px/1 var(--display);margin:0 0 4px}
+.priors{display:grid;gap:0;margin:8px 0 0;padding:0;list-style:none;font:400 16px/1.45 var(--type)}
+.priors li{border-top:1px dashed rgba(107,87,58,.55);padding:8px 0}
+.stamp{position:absolute;right:26px;top:22px;border:4px double var(--stamp);color:var(--stamp);font:700 24px/1 var(--cond);padding:8px 14px;transform:rotate(8deg);letter-spacing:.1em;
+  opacity:.9;border-radius:4px;-webkit-mask:var(--ink-mask);mask:var(--ink-mask)}
+.poster{grid-template-columns:180px 1fr;padding-bottom:104px}
+.poster .stamp{top:auto;bottom:30px}
+.wanted{grid-column:1/-1;font:900 clamp(56px,10vw,118px)/.86 var(--display);letter-spacing:.04em;text-align:center;border-bottom:4px double var(--ink);padding:6px 0 14px}
+.wanted span{display:block;font:italic 700 .22em/1 var(--display);letter-spacing:.08em;margin-top:10px;color:var(--ink-soft)}
+.wanted.poi{font-size:clamp(34px,6.6vw,76px)}.wanted.poi span{font-size:.32em}
+.victim{font:900 clamp(30px,5vw,52px)/1.02 var(--display);color:var(--stamp);overflow-wrap:anywhere;margin:4px 0 8px}
+.count{font:900 clamp(76px,10vw,108px)/.9 var(--display);color:var(--stamp);font-variant-numeric:lining-nums}
+.noface{display:grid;place-items:center;font:900 90px var(--display);color:var(--ink-soft)}
+
+/* the case folders */
 .cases{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,470px),1fr));gap:28px;margin-top:34px}
-.folder{background:var(--manila);color:var(--ink);padding:22px 22px 18px;position:relative;box-shadow:0 14px 40px rgba(0,0,0,.55);min-width:0}
-.folder::before{content:"";position:absolute;left:18px;top:-14px;width:120px;height:16px;background:var(--manila-edge);clip-path:polygon(8% 0,92% 0,100% 100%,0 100%)}
-.folder h3{font:900 28px/1 var(--display);margin:2px 0 2px;letter-spacing:.03em;overflow-wrap:anywhere}
-.meta{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:14px 0;font-variant-numeric:tabular-nums}
-.meta div{min-width:0}.meta .v{font-weight:700;font-size:15px;overflow-wrap:anywhere}
-.clues{list-style:none;margin:0;padding:0;display:grid;gap:10px}
-.clues li{padding-left:28px;position:relative}
-.clues li::before{content:attr(data-n);position:absolute;left:0;top:2px;width:20px;height:18px;background:var(--tape);color:#111;font:700 12px/18px var(--type);text-align:center;clip-path:polygon(50% 0,100% 100%,0 100%);padding-top:2px}
-.last{margin-top:14px;padding:10px 12px;background:rgba(42,33,24,.08);border-left:3px solid var(--ink);font-style:italic;overflow-wrap:anywhere}
-.ruling{margin-top:12px;font:900 19px/1.15 var(--display);letter-spacing:.06em;color:var(--stamp);text-transform:uppercase}
-.alive{color:var(--dim);font-size:15px;margin-top:20px}
-.alive b{color:var(--chalk)}
-.section-k{margin-top:46px;font:700 14px var(--display);letter-spacing:.3em;color:var(--tape)}
-footer{margin-top:50px;color:var(--dim);font-size:13px;max-width:70ch}
-@media (max-width:560px){.rap{grid-template-columns:1fr}.rap img{width:110px;height:110px}.stamp{font-size:18px}.meta{grid-template-columns:1fr 1fr}}
+.folder{background:var(--manila);background-image:var(--grain),linear-gradient(165deg,#ecdaab,#d8c18b);color:var(--ink);padding:28px 26px 24px;position:relative;
+  box-shadow:0 26px 60px rgba(0,0,0,.6), 0 0 0 1px rgba(0,0,0,.15);min-width:0;border-radius:0 4px 4px 4px;margin-top:22px}
+.folder::before{content:"";position:absolute;left:0;top:-20px;width:150px;height:21px;background:#dcc690;background-image:var(--grain);border-radius:7px 7px 0 0;
+  clip-path:polygon(0 0,88% 0,100% 100%,0 100%)}
+.folder::after{content:"";position:absolute;right:34px;top:-14px;width:16px;height:52px;border:3px solid #8f969e;border-radius:9px;border-top-color:#c3c8ce;
+  box-shadow:1px 2px 3px rgba(0,0,0,.35);transform:rotate(4deg)}
+.folder h3{font:900 clamp(28px,4vw,36px)/1.05 var(--display);margin:6px 0 4px;overflow-wrap:anywhere;letter-spacing:-.005em}
+.meta{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin:16px 0 18px;padding:12px 0;border-block:1px solid rgba(35,26,17,.28);font-variant-numeric:tabular-nums}
+.meta div{min-width:0}.meta .v{font:700 15px/1.35 var(--type);overflow-wrap:anywhere;margin-top:3px}
+.clues{list-style:none;margin:0;padding:0;display:grid;gap:12px;font:400 16px/1.5 var(--type)}
+.clues li{padding-left:36px;position:relative}
+.clues li::before{content:attr(data-n);position:absolute;left:0;top:0;width:24px;height:24px;background:linear-gradient(180deg,#f7d64e,#e3b51f);color:#15120a;
+  font:700 12px/1 var(--cond);display:grid;place-items:end center;padding-bottom:3px;clip-path:polygon(50% 0,100% 100%,0 100%);filter:drop-shadow(0 1px 0 rgba(0,0,0,.3))}
+.witness{margin-top:18px;padding:12px 14px;border:1px dashed rgba(107,87,58,.7);background:rgba(255,255,255,.12);font:400 15px/1.5 var(--type)}
+.last{margin-top:16px;padding:14px 16px;background:#f5ecd4;background-image:var(--grain);box-shadow:0 6px 14px rgba(0,0,0,.18);transform:rotate(-.6deg);font:italic 400 17px/1.45 var(--serif);overflow-wrap:anywhere}
+.funeral{margin-top:14px;font:italic 400 16px var(--serif);color:var(--ink-soft)}
+.ruling{margin-top:16px;font:700 20px/1.2 var(--cond);letter-spacing:.06em;color:var(--stamp);text-transform:uppercase;border:3px solid var(--stamp);padding:8px 12px;
+  border-radius:3px;max-width:100%;-webkit-mask:var(--ink-mask);mask:var(--ink-mask);display:inline-block;transform:rotate(-1.2deg)}
+.alive{color:var(--dim);font-size:16px;margin-top:28px;max-width:80ch}
+.alive b{color:var(--chalk);font-weight:600}
+footer{margin-top:64px;padding-top:22px;border-top:1px solid var(--line);color:var(--dim);font-size:14px;max-width:72ch}
 @media (prefers-reduced-motion:no-preference){.folder{animation:drop .5s ease-out both}}
 @keyframes drop{from{transform:translateY(8px)}to{transform:none}}
-/* poster, witness, funeral, stack, court */
-.poster{grid-template-columns:170px 1fr;border:2px solid var(--ink);outline:8px solid var(--manila);outline-offset:-14px}
-.wanted{grid-column:1/-1;font:900 clamp(48px,9vw,96px)/.85 var(--display);letter-spacing:.06em;text-align:center;border-bottom:3px solid var(--ink);padding-bottom:10px}
-.wanted span{display:block;font-size:.26em;letter-spacing:.4em;margin-top:6px}
-.wanted.poi{font-size:clamp(30px,6.4vw,70px)}.wanted.poi span{font-size:.36em}
-.victim{font:900 clamp(30px,5vw,52px)/1 var(--display);color:var(--stamp);overflow-wrap:anywhere;margin:4px 0 6px}
-.count{font:900 84px/.9 var(--display);color:var(--stamp)}
-.noface{width:150px;height:150px;border:3px solid var(--ink);display:grid;place-items:center;font:900 90px var(--display);color:var(--ink-soft);background:repeating-linear-gradient(0deg,transparent 0 18px,rgba(42,33,24,.15) 18px 19px)}
-.poster{padding-bottom:100px}
-.poster .stamp{top:auto;bottom:26px}
-.witness{margin-top:14px;padding:10px 12px;border:1px dashed var(--ink-soft)}
-.funeral{margin-top:12px;font-style:italic;color:var(--ink-soft)}
+
+/* stack, court, sentences */
 .stack{margin-top:10px;scroll-margin-top:16px}
-.stack .folder{margin-top:22px;max-width:640px}
-.flip{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-top:18px;max-width:640px}
-.flip span{color:var(--dim);flex:1;text-align:center}
+.stack .folder{margin-top:38px;max-width:680px}
+.flip{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-top:22px;max-width:680px}
+.flip span{color:var(--dim);flex:1;text-align:center;font:600 14px var(--cond);letter-spacing:.14em}
 .flip button:disabled{opacity:.35;cursor:default}
-.thought{font-style:italic;color:var(--tape);max-width:60ch;margin:18px 0 0;font-size:17px}
-.thought::before{content:"— ";}
-.court{margin-top:44px;scroll-margin-top:16px;max-width:640px}
-.court h2{font:900 clamp(30px,5vw,48px)/1 var(--display);margin:8px 0}
-.pleas{display:flex;gap:12px;flex-wrap:wrap;margin-top:16px}
-.sentence{margin-top:20px;font:900 24px/1.15 var(--display);color:var(--tape);letter-spacing:.04em}
-.pending{margin-top:20px;border:3px dashed var(--stamp)}
+.court{margin-top:56px;scroll-margin-top:16px;max-width:680px;padding:28px;border-radius:4px;position:relative;
+  background:linear-gradient(180deg,rgba(255,255,255,.04),transparent),repeating-linear-gradient(90deg,#2a1b12 0 3px,#24170f 3px 7px,#2c1d13 7px 12px);
+  box-shadow:0 0 0 1px rgba(200,163,90,.45), 0 0 0 6px #1a110b, 0 0 0 7px rgba(200,163,90,.35), 0 30px 60px rgba(0,0,0,.6)}
+.court .section-k{margin-top:0;color:var(--brass-hi)}
+.court h2{font:900 clamp(30px,5vw,46px)/1.05 var(--display);margin:12px 0 8px}
+.court > p{color:#d6cbb3}
+.pleas{display:flex;gap:12px;flex-wrap:wrap;margin-top:18px}
+.sentence{margin-top:22px;font:700 italic 26px/1.2 var(--display);color:#f3d27e}
+.sentence b{font-style:normal}
+.pending{margin-top:24px;outline:3px dashed rgba(165,35,26,.75);outline-offset:-10px}
+.pending s{opacity:.55;font-weight:400}
 .tally{color:var(--dim);font-size:14px;margin-top:14px}
-body.reopen::after{content:"CASE REOPENED · CASE REOPENED · CASE REOPENED · CASE REOPENED · CASE REOPENED";position:fixed;left:-20vw;right:-20vw;top:45%;background:var(--tape);color:#111;font:900 clamp(22px,4vw,40px)/1 var(--display);letter-spacing:.3em;padding:14px 0;white-space:nowrap;overflow:hidden;transform:rotate(-8deg);z-index:9;pointer-events:none;animation:slap 2.4s ease-out forwards}
+body.reopen::after{content:"CASE REOPENED · CASE REOPENED · CASE REOPENED · CASE REOPENED · CASE REOPENED";position:fixed;left:-20vw;right:-20vw;top:45%;
+  background:linear-gradient(180deg,#f6d34a,var(--tape) 45%,#d8ad1f);color:#15120a;font:700 clamp(22px,4vw,38px)/1 var(--cond);letter-spacing:.16em;padding:14px 0;white-space:nowrap;overflow:hidden;
+  transform:rotate(-8deg);z-index:9;pointer-events:none;box-shadow:0 10px 30px rgba(0,0,0,.6);animation:slap 2.4s ease-out forwards}
 @keyframes slap{0%{transform:rotate(-8deg) translateX(-110%)}12%{transform:rotate(-8deg) translateX(0)}80%{opacity:1}100%{opacity:0;transform:rotate(-8deg)}}
-@media (max-width:560px){.poster{grid-template-columns:1fr}.noface{width:110px;height:110px}.count{font-size:64px}}
-/* theatre */
-.social{display:grid;gap:14px;margin-top:22px;max-width:760px}
-.social .row{display:flex;gap:8px;flex-wrap:wrap;margin-top:6px}
-.social input{flex:1 1 200px;font-size:16px;padding:9px 12px}
-.lineup{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,260px),1fr));gap:18px;margin-top:14px}
-.mini{background:var(--manila);color:var(--ink);padding:18px;position:relative;box-shadow:0 12px 32px rgba(0,0,0,.5);overflow:hidden}
-.mini h3{font:900 26px/1 var(--display);margin:4px 0;overflow-wrap:anywhere}
-.mini .count{font-size:64px}
-.ministamp{position:absolute;right:12px;top:16px;border:4px solid var(--stamp);color:var(--stamp);font:900 22px/1 var(--display);padding:6px 10px;transform:rotate(9deg);animation:slam .32s ease-in both}
-.sharerow{display:flex;gap:14px;align-items:center;flex-wrap:wrap;margin-top:16px;color:var(--dim);font-size:14px}
-.cardbox{position:fixed;inset:0;background:rgba(0,0,0,.82);display:grid;place-items:center;z-index:20;padding:16px}
-.cardinner{max-width:min(1000px,100%);display:grid;gap:12px}
-.cardinner img{width:100%;height:auto;box-shadow:0 20px 60px rgba(0,0,0,.7)}
-.cardrow{display:flex;gap:14px;align-items:center;flex-wrap:wrap;color:var(--dim);font-size:14px}
-.btnlink{background:var(--tape);color:#111;font:900 18px var(--display);letter-spacing:.12em;padding:12px 22px;text-decoration:none;border-radius:2px}
-.btnlink.ghostlink{background:transparent;color:var(--chalk);border:1px solid #3a4150;font-size:15px;padding:8px 14px}
-.cardcap{margin:0;color:var(--dim);font-size:13px;overflow-wrap:anywhere}
-.topbar{position:absolute;top:58px;right:max(16px,env(safe-area-inset-right,0px));display:flex;gap:8px;align-items:center;color:var(--dim);font-size:13px}
-.topbar button{font-size:13px;padding:6px 12px}
-.topbar b{color:var(--chalk)}
-@media (max-width:560px){.topbar{position:static;justify-content:flex-end;margin-top:10px}}
-.bigstamp.s2{left:80%;top:22%;font-size:clamp(28px,5vw,52px);border-width:5px;transform:translate(-50%,-50%) rotate(9deg);animation-name:slam2}
-.bigstamp.s3{left:30%;top:80%;font-size:clamp(28px,5vw,52px);border-width:5px;transform:translate(-50%,-50%) rotate(-4deg);animation-name:slam3}
+
+/* compare + share */
+.social{display:grid;gap:16px;margin-top:26px;max-width:760px}
+.social .row{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+.social input{flex:1 1 200px;min-width:0;background:rgba(0,0,0,.3);border:1px solid rgba(200,163,90,.4);color:var(--chalk);font:400 17px var(--type);padding:10px 12px;border-radius:3px}
+.social .k,.sharerow,.reopen.k{color:var(--dim)}
+.lineup{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,260px),1fr));gap:20px;margin-top:16px}
+.mini{background:var(--paper);background-image:var(--grain),radial-gradient(ellipse at 50% 40%, #f2e8cc 30%, #dccaa0 100%);color:var(--ink);padding:20px;position:relative;box-shadow:0 18px 40px rgba(0,0,0,.55);overflow:hidden}
+.mini h3{font:900 28px/1.05 var(--display);margin:4px 0;overflow-wrap:anywhere}
+.mini .count{font-size:68px}
+.ministamp{position:absolute;right:12px;top:16px;border:4px double var(--stamp);color:var(--stamp);font:700 20px/1 var(--cond);letter-spacing:.08em;padding:6px 10px;transform:rotate(9deg);
+  -webkit-mask:var(--ink-mask);mask:var(--ink-mask);animation:slam .32s ease-in both}
+.sharerow{display:flex;gap:14px;align-items:center;flex-wrap:wrap;margin-top:20px;font-size:15px;font-style:italic}
+.cardbox{position:fixed;inset:0;background:rgba(5,6,9,.88);display:grid;place-items:center;z-index:20;padding:16px;backdrop-filter:blur(4px)}
+.cardinner{max-width:min(1000px,100%);display:grid;gap:14px}
+.cardinner img{width:100%;height:auto;box-shadow:0 24px 70px rgba(0,0,0,.75)}
+.cardrow{display:flex;gap:12px;align-items:center;flex-wrap:wrap;color:var(--dim);font-size:14px}
+.cardcap{margin:0;color:var(--dim);font-size:14px;overflow-wrap:anywhere}
+p.reopen{margin:14px 0 0;display:flex;gap:12px;align-items:center;flex-wrap:wrap}p.reopen button{font-size:12px;padding:7px 11px}
+
+/* court stamps that land on the poster */
+.bigstamp{position:absolute;left:50%;top:46%;transform:translate(-50%,-50%) rotate(-12deg);border:8px double var(--stamp);color:var(--stamp);border-radius:8px;
+  font:700 clamp(54px,11vw,120px)/1 var(--cond);padding:8px 26px;letter-spacing:.08em;mix-blend-mode:multiply;pointer-events:none;
+  -webkit-mask:var(--ink-mask);mask:var(--ink-mask);animation:bigslam .4s ease-in both}
+.bigstamp.s2{left:80%;top:22%;font-size:clamp(26px,5vw,50px);border-width:6px;transform:translate(-50%,-50%) rotate(9deg);animation-name:slam2}
+.bigstamp.s3{left:30%;top:80%;font-size:clamp(26px,5vw,50px);border-width:6px;transform:translate(-50%,-50%) rotate(-4deg);animation-name:slam3}
+@keyframes bigslam{0%{transform:translate(-50%,-50%) scale(3) rotate(-20deg);opacity:0}70%{transform:translate(-50%,-50%) scale(.95) rotate(-12deg);opacity:.95}100%{transform:translate(-50%,-50%) rotate(-12deg);opacity:.9}}
 @keyframes slam2{0%{transform:translate(-50%,-50%) scale(3) rotate(20deg);opacity:0}70%{transform:translate(-50%,-50%) scale(.95) rotate(9deg)}100%{transform:translate(-50%,-50%) rotate(9deg);opacity:.9}}
 @keyframes slam3{0%{transform:translate(-50%,-50%) scale(3) rotate(-14deg);opacity:0}70%{transform:translate(-50%,-50%) scale(.95) rotate(-4deg)}100%{transform:translate(-50%,-50%) rotate(-4deg);opacity:.9}}
-.pending s{opacity:.55;font-weight:400}
+
+/* the theatre */
 .wait{opacity:0}
 .witness,.last,.funeral,.ruling{transition:opacity .35s}
 @keyframes inR{from{transform:translateX(60px) rotate(2deg);opacity:0}to{transform:none;opacity:1}}
 @keyframes inL{from{transform:translateX(-60px) rotate(-2deg);opacity:0}to{transform:none;opacity:1}}
 .in-right{animation:inR .45s cubic-bezier(.2,.8,.3,1) both}.in-left{animation:inL .45s cubic-bezier(.2,.8,.3,1) both}
-@keyframes slam{0%{transform:scale(2.6) rotate(-6deg);opacity:0}60%{transform:scale(.94) rotate(-2deg);opacity:1}100%{transform:rotate(-2deg)}}
-.ruling.slam{animation:slam .32s ease-in both;transform-origin:left center;display:inline-block}
+@keyframes slam{0%{transform:scale(2.6) rotate(-6deg);opacity:0}60%{transform:scale(.94) rotate(-2deg);opacity:1}100%{transform:rotate(-1.2deg)}}
+.ruling.slam{animation:slam .32s ease-in both;transform-origin:left center}
 @keyframes shake{0%,100%{transform:none}20%{transform:translate(-5px,3px)}40%{transform:translate(5px,-3px)}60%{transform:translate(-3px,2px)}80%{transform:translate(2px,-1px)}}
 body.shake .wrap{animation:shake .35s}
-.bigstamp{position:absolute;left:50%;top:46%;transform:translate(-50%,-50%) rotate(-12deg);border:8px solid var(--stamp);color:var(--stamp);font:900 clamp(60px,12vw,130px)/1 var(--display);padding:8px 26px;letter-spacing:.08em;mix-blend-mode:multiply;pointer-events:none;animation:bigslam .4s ease-in both}
-@keyframes bigslam{0%{transform:translate(-50%,-50%) scale(3) rotate(-20deg);opacity:0}70%{transform:translate(-50%,-50%) scale(.95) rotate(-12deg);opacity:.95}100%{transform:translate(-50%,-50%) rotate(-12deg);opacity:.9}}
 .folder{cursor:default}
-.reopen{margin:10px 0 0;display:flex;gap:12px;align-items:center;flex-wrap:wrap}.reopen button{font-size:12px;padding:6px 10px}
+
+/* tablets and phones */
+@media (max-width:900px){
+  .hero{grid-template-columns:1fr;gap:26px;padding-top:34px}
+  .evidence{height:400px;max-width:440px}
+  .steps{grid-template-columns:1fr;gap:18px}
+}
+@media (max-width:560px){
+  body{font-size:16px}
+  .brand b{font-size:17px}.brand small{font-size:10px}.brand svg{width:34px;height:38px}
+  .topbar button{font-size:12px;padding:7px 10px}
+  .brand b{white-space:nowrap;font-size:16px}.brand{gap:9px}.brand svg{width:30px;height:34px}
+  .topnav{gap:8px}.topbar{flex-wrap:nowrap;gap:6px}.topbar button{font-size:11px;padding:7px 9px;letter-spacing:.06em;white-space:nowrap}
+  .ev-tag{font-size:12px;bottom:-3%;right:2%}
+  #snd{font-size:0;padding:7px 11px}#snd::before{content:"♪";font-size:15px;letter-spacing:0}#snd[aria-pressed=false]::before{opacity:.45;text-decoration:line-through}
+  .hero{padding-top:26px}
+  .lede{font-size:17px}
+  .intake{padding:16px 16px 18px;transform:none}
+  .intake-row{flex-direction:column}
+  .intake button[type=submit]{width:100%}
+  .field{flex:0 0 auto}
+  .evidence{height:340px}
+  .ev-name{font-size:25px}.ev-paper{padding:18px 18px 20px}.ev-typed{font-size:14px}.ev-stamp{font-size:22px}
+  .ev-photo{width:46%}
+  .rap,.poster{grid-template-columns:1fr;padding:24px 20px 96px}
+  .rap img,.noface{width:132px;height:132px}
+  .rap .mug{justify-items:start}.board{width:132px}
+  .stamp{font-size:17px;right:18px}
+  .meta{grid-template-columns:1fr 1fr}
+  .folder{padding:24px 18px 20px}
+  .court{padding:22px 18px}
+  .count{font-size:72px}
+}
 </style>
 <!-- Cloudflare Web Analytics --><script defer src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "347028dc90f94b878df232f9dd259d00"}'></script><!-- End Cloudflare Web Analytics -->
-<div class="tape" aria-hidden="true">CRIME SCENE · DO NOT CROSS · CRIME SCENE · DO NOT CROSS · CRIME SCENE · DO NOT CROSS · CRIME SCENE · DO NOT CROSS · CRIME SCENE · DO NOT CROSS</div>
-<div class="wrap">
-<header>
-  <div class="eyebrow">COLD CASE UNIT · GITHUB DIVISION</div>
-  <h1>Somebody killed all these projects.</h1>
-  <p class="lede">The commit log says it was you. Type a GitHub username and we'll open a file on every project its owner walked away from, built only from facts in the public history.</p>
-  <form id="intake">
-    <label class="sr" for="who">GitHub username</label>
-    <input id="who" name="who" placeholder="github username" autocomplete="off" spellcheck="false" value="">
-    <button type="submit">OPEN THE CASE</button>
-  </form>
-<div class="onfile">Try one: <button class="ghost" type="button" data-open="connabyss">connabyss</button></div>
+<nav class="topnav">
+  <a class="brand" href="./" aria-label="Cold Case Unit, start over">
+    <svg viewBox="0 0 40 44" aria-hidden="true"><defs><linearGradient id="bz" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f1d690"/><stop offset=".55" stop-color="#c8a35a"/><stop offset="1" stop-color="#8a6a2e"/></linearGradient></defs>
+      <path d="M20 1.5 37 7.5v12.2C37 31 29.6 38.6 20 42.5 10.4 38.6 3 31 3 19.7V7.5Z" fill="url(#bz)" stroke="#5a431b" stroke-width="1.2"/>
+      <path d="M20 6.2 33 10.8v9.3c0 8.6-5.5 14.6-13 17.8-7.5-3.2-13-9.2-13-17.8v-9.3Z" fill="none" stroke="#6e5222" stroke-width=".9" opacity=".7"/>
+      <path d="m20 12.5 2.5 5.1 5.6.8-4.05 3.95.96 5.6L20 25.3l-5 2.65.96-5.6L11.9 18.4l5.6-.8Z" fill="#6e5222"/></svg>
+    <span><b>Cold Case Unit</b><small>GitHub Division</small></span></a>
   <div class="topbar"><span id="who-am-i"></span><button class="ghost" type="button" id="snd" aria-pressed="true">♪ Sound on</button></div>
-  <div class="notice" id="notice" role="status"></div>
+</nav>
+<div class="wrap">
+<header class="hero">
+  <div class="hero-copy">
+    <div class="eyebrow">Case files on abandoned code</div>
+    <h1>Somebody <em>killed</em> all these projects.</h1>
+    <p class="lede">The commit log says it was you. Type a GitHub username and we'll open a file on every project its owner walked away from, built only from facts in the public history.</p>
+    <form id="intake" class="intake">
+      <div class="intake-head"><span>Form CC-1 · Request to open a file</span><span class="red">Urgent</span></div>
+      <label for="who">Name of the suspect (a GitHub username)</label>
+      <div class="intake-row"><div class="field"><span aria-hidden="true">@</span><input id="who" name="who" placeholder="username" autocomplete="off" autocapitalize="off" spellcheck="false" value=""></div>
+      <button type="submit">Open the case</button></div>
+    </form>
+<div class="onfile">Try one: <button class="ghost" type="button" data-open="connabyss">connabyss</button></div>
+    <div class="notice" id="notice" role="status"></div>
+  </div>
+  <div class="evidence" aria-hidden="true">
+    <div class="ev-tape two tape">Crime scene · Do not cross · Crime scene · Do not cross · Crime scene · Do not cross · Crime scene · Do not cross</div>
+    <div class="ev-folder"><div class="ev-tab">CASE 0001 · EXAMPLE</div>
+      <div class="ev-paper"><div class="ev-k">Victim</div><div class="ev-name">ghosts-of-<wbr>bugs-past</div>
+        <div class="ev-grid"><div><span>Lived</span><b>58 minutes</b></div><div><span>Body count</span><b>7 commits</b></div></div>
+        <p class="ev-typed">“Don't stay dead,” said the README. It stayed dead.</p>
+        <div class="ev-stamp">COLD</div></div></div>
+    <figure class="ev-photo">
+      <svg viewBox="0 0 200 170" role="presentation"><defs><radialGradient id="flo" cx=".5" cy=".42" r=".75"><stop offset="0" stop-color="#4a4740"/><stop offset="1" stop-color="#15161a"/></radialGradient>
+        <filter id="chk"><feTurbulence type="fractalNoise" baseFrequency="1.6" numOctaves="1" seed="3"/><feDisplacementMap in="SourceGraphic" scale="2.2"/></filter></defs>
+        <rect width="200" height="170" fill="url(#flo)"/>
+        <g stroke="rgba(0,0,0,.35)" stroke-width="1"><path d="M0 40h200M0 85h200M0 130h200"/><path d="M60 0v40M150 40v45M30 85v45M120 85v45M80 130v40M170 130v40"/></g>
+        <g fill="none" stroke="#f1ede2" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" filter="url(#chk)" opacity=".92">
+          <circle cx="62" cy="58" r="13"/>
+          <path d="M74 66c10 4 18 3 28 1l26-14c4-2 8 1 6 5l-22 16 18 6c10 3 22 9 32 18 3 3 0 7-4 6l-30-12-10 22 14 30c2 4-2 7-5 5l-20-26c-4-5-6-12-5-18l-4-10c-10 2-20 1-28-4l-14 18c-2 3-7 1-6-3l12-24c2-4 4-7 6-9"/></g>
+        <g transform="translate(36 128)"><path d="M0 14 8 0l8 14Z" fill="#f0c534"/><text x="8" y="12.5" font-size="7" text-anchor="middle" font-family="Oswald,Arial" font-weight="700" fill="#15120a">1</text></g>
+        <g transform="translate(150 50)"><path d="M0 14 8 0l8 14Z" fill="#f0c534"/><text x="8" y="12.5" font-size="7" text-anchor="middle" font-family="Oswald,Arial" font-weight="700" fill="#15120a">2</text></g>
+        <g transform="translate(140 132) rotate(-12)"><rect width="34" height="20" rx="2" fill="#2b2d33" stroke="#0c0d10"/><rect x="3" y="3" width="28" height="12" fill="#3d6f8f" opacity=".55"/></g>
+      </svg>
+      <figcaption>Scene of the crime</figcaption></figure>
+    <div class="ev-tag"><small>EXHIBIT A</small>Last words:<br>“Hand check of the<br>first real runs”</div>
+    <div class="ev-tape tape">Crime scene · Do not cross · Crime scene · Do not cross · Crime scene · Do not cross · Crime scene · Do not cross</div>
+  </div>
 </header>
+<ol class="steps" aria-label="How it works">
+  <li><span class="num">1</span><div><b>Name a suspect</b><span>Any GitHub username. Yours is the most fun.</span></div></li>
+  <li><span class="num">2</span><div><b>We pull the record</b><span>Every quiet project gets a case file, read live from the public history.</span></div></li>
+  <li><span class="num">3</span><div><b>Face the court</b><span>Plead guilty, or promise to finish it tomorrow. The court remembers.</span></div></li>
+</ol>
 <main id="out"><!--INTRO--><!--/INTRO--></main>
 <footer>Every line comes from the public GitHub record, read live in your browser: commit dates and messages, README text, file lists, stars and forks. Nothing is stored on a server. Only public projects are looked at. It roasts code, not people.</footer>
 </div>
@@ -599,10 +802,10 @@ const SITE = 'connabyss.github.io/cold-case';
 function cardHash(s){ let h = 2166136261; for (const ch of String(s).toLowerCase()) { h ^= ch.charCodeAt(0); h = Math.imul(h, 16777619); } return h >>> 0; }
 function cardStamps(){ return [...document.querySelectorAll('.poster .bigstamp')].map(e => e.textContent); }
 async function shareCard(s, name, deadN, aliveN, mo){
-  try { await Promise.all(['900 80px "Big Shoulders Stencil Display"','700 20px "Big Shoulders Stencil Display"','400 20px "Courier Prime"','700 20px "Courier Prime"','italic 400 20px "Courier Prime"'].map(f => document.fonts.load(f))); } catch(e) {}
+  try { await Promise.all(['700 80px "Oswald"','600 20px "Oswald"','400 20px "Courier Prime"','700 20px "Courier Prime"','italic 400 20px "Courier Prime"'].map(f => document.fonts.load(f))); } catch(e) {}
   const W = 1200, Hh = 630, cv = document.createElement('canvas'); cv.width = W*2; cv.height = Hh*2;
   const g = cv.getContext('2d'); g.scale(2,2);
-  const DISP = '"Big Shoulders Stencil Display", Impact, sans-serif', TYPE = '"Courier Prime", "Courier New", monospace';
+  const DISP = '"Oswald", Impact, sans-serif', TYPE = '"Courier Prime", "Courier New", monospace';
   const INK = '#2a2118', SOFT = '#6b5a40', RED = '#a8261d', PAPER = '#dccca5', TAPE = '#e8c23a';
   // the same suspect always gets the same case number and the same specks of dirt
   const seed = cardHash(name); let r = seed || 1; const rnd = () => (r = Math.imul(r ^ (r >>> 15), 2246822519) ^ Math.imul(r ^ (r >>> 13), 3266489917), ((r >>>= 0) % 10000) / 10000);
@@ -630,7 +833,7 @@ async function shareCard(s, name, deadN, aliveN, mo){
   g.fillStyle = '#c6b48a'; g.fillRect(mx, my, ms, ms);
   if (s.avatar) { const img = new Image(); img.crossOrigin = 'anonymous'; img.src = s.avatar; await img.decode().catch(()=>{});
     if (img.naturalWidth) { g.save(); g.filter = 'grayscale(1) contrast(1.2) sepia(.15)'; g.drawImage(img, mx, my, ms, ms); g.restore(); } }
-  if (!s.avatar) { g.fillStyle = '#6b5a40'; g.font = `900 140px ${DISP}`; g.textAlign = 'center'; g.fillText('?', mx+ms/2, my+ms/2+50); }
+  if (!s.avatar) { g.fillStyle = '#6b5a40'; g.font = `700 140px ${DISP}`; g.textAlign = 'center'; g.fillText('?', mx+ms/2, my+ms/2+50); }
   g.save(); g.globalAlpha = .55; g.strokeStyle = '#111'; g.fillStyle = '#111'; g.font = `700 11px ${TYPE}`; g.textAlign = 'left'; g.lineWidth = 1;
   for (let i = 1; i < 6; i++) { const y = my + i*ms/6; g.beginPath(); g.moveTo(mx, y); g.lineTo(mx + (i%2 ? 14 : 24), y); g.stroke(); g.fillText(`${7-i}'`, mx+28, y+4); }
   g.restore();
@@ -643,7 +846,7 @@ async function shareCard(s, name, deadN, aliveN, mo){
 
   // right: the charge
   const cx = mx+ms+44, cw = px+pw-46 - cx; g.textAlign = 'left';
-  g.fillStyle = INK; g.font = `900 104px ${DISP}`; g.fillText('WANTED', cx-4, py+128);
+  g.fillStyle = INK; g.font = `700 104px ${DISP}`; g.fillText('WANTED', cx-4, py+128);
   const wW = g.measureText('WANTED').width;
   g.font = `700 20px ${DISP}`; g.fillStyle = SOFT; g.fillText('FOR THE ABANDONMENT OF', cx + wW + 18, py+92);
   g.fillText(deadN ? 'PUBLIC PROJECTS ON GITHUB' : 'NOTHING. YET.', cx + wW + 18, py+118);
@@ -651,13 +854,13 @@ async function shareCard(s, name, deadN, aliveN, mo){
   // the count is the headline
   const unit = deadN === 1 ? 'PROJECT' : 'PROJECTS';
   const numTxt = deadN ? deadN.toLocaleString() : 'ZERO';
-  let nsz = 120; g.font = `900 ${nsz}px ${DISP}`;
-  const unitW = () => { g.font = `900 ${Math.round(nsz*.42)}px ${DISP}`; const w = g.measureText(unit).width; g.font = `900 ${nsz}px ${DISP}`; return w; };
-  while (g.measureText(numTxt).width + 20 + unitW() > cw - 150 && nsz > 60) { nsz -= 4; g.font = `900 ${nsz}px ${DISP}`; }
+  let nsz = 120; g.font = `700 ${nsz}px ${DISP}`;
+  const unitW = () => { g.font = `700 ${Math.round(nsz*.42)}px ${DISP}`; const w = g.measureText(unit).width; g.font = `700 ${nsz}px ${DISP}`; return w; };
+  while (g.measureText(numTxt).width + 20 + unitW() > cw - 150 && nsz > 60) { nsz -= 4; g.font = `700 ${nsz}px ${DISP}`; }
   const ny = py+150+nsz*.92;
   g.fillStyle = RED; g.fillText(numTxt, cx-4, ny); const nW = g.measureText(numTxt).width;
-  g.font = `900 ${Math.round(nsz*.42)}px ${DISP}`; g.fillText(deadN ? unit : 'BODIES', cx + nW + 14, ny - nsz*.36);
-  g.fillStyle = SOFT; g.font = `700 ${Math.round(nsz*.22)}px ${DISP}`;
+  g.font = `700 ${Math.round(nsz*.42)}px ${DISP}`; g.fillText(deadN ? unit : 'BODIES', cx + nW + 14, ny - nsz*.36);
+  g.fillStyle = SOFT; g.font = `600 ${Math.round(nsz*.22)}px ${DISP}`;
   g.fillText(deadN ? 'LEFT FOR DEAD' : 'SUSPICIOUSLY CLEAN', cx + nW + 16, ny);
   g.font = `italic 400 17px ${TYPE}`; g.fillStyle = SOFT;
   g.fillText(aliveN ? `${aliveN.toLocaleString()} still breathing. For now.` : deadN ? 'None left breathing.' : 'The unit will keep an eye on this one.', cx, ny + 30);
@@ -678,14 +881,14 @@ async function shareCard(s, name, deadN, aliveN, mo){
 
   // the court's stamps, each in a spot where it covers no words
   const stamp = (word, x, y, rot, size) => { g.save(); g.translate(x,y); g.rotate(rot); g.globalAlpha = .86; g.globalCompositeOperation = 'multiply'; g.strokeStyle = g.fillStyle = RED;
-    g.font = `900 ${size}px ${DISP}`; g.textAlign = 'center'; g.textBaseline = 'middle'; const w = g.measureText(word).width + size*.5;
+    g.font = `700 ${size}px ${DISP}`; g.textAlign = 'center'; g.textBaseline = 'middle'; const w = g.measureText(word).width + size*.5;
     g.lineWidth = Math.max(4, size/12); g.strokeRect(-w/2, -size*.62, w, size*1.2); g.fillText(word, 0, 3);
     // worn ink: knock a few holes out of the stamp
     g.globalCompositeOperation = 'source-over'; g.globalAlpha = 1; g.fillStyle = PAPER;
     for (let i = 0; i < 40; i++) g.fillRect((rnd()-.5)*w, (rnd()-.5)*size*1.2, 1+rnd()*3, 1+rnd()*2);
     g.restore(); };
   const rank = document.querySelector('.poster .stamp')?.textContent || (deadN >= 50 ? 'MOST WANTED' : deadN >= 3 ? 'SERIAL OFFENDER' : deadN ? 'PERSON OF INTEREST' : 'CLEAN RECORD');
-  let rs = 30; g.font = `900 ${rs}px ${DISP}`; while (g.measureText(rank).width + rs*.5 > 200 && rs > 18) g.font = `900 ${--rs}px ${DISP}`;
+  let rs = 30; g.font = `700 ${rs}px ${DISP}`; while (g.measureText(rank).width + rs*.5 > 200 && rs > 18) g.font = `700 ${--rs}px ${DISP}`;
   stamp(rank, px+pw-140, py+66, .1, rs);
   if (guilty) stamp('GUILTY', px+pw-170, ny+100, -.22, 72);
   if (live.includes('IN DENIAL')) stamp('IN DENIAL', px+pw-170, ny - nsz*.5, .14, 40);
@@ -695,7 +898,7 @@ async function shareCard(s, name, deadN, aliveN, mo){
   // under the poster: where to get your own
   g.textBaseline = 'middle';
   g.save(); g.translate(0, 572); g.rotate(-.01); g.fillStyle = TAPE; g.fillRect(-20, -22, W+40, 44);
-  g.fillStyle = '#111'; g.textAlign = 'left'; g.font = `900 22px ${DISP}`; g.fillText('COLD CASE UNIT', 40, 1);
+  g.fillStyle = '#111'; g.textAlign = 'left'; g.font = `700 22px ${DISP}`; g.fillText('COLD CASE UNIT', 40, 1);
   g.textAlign = 'center'; g.font = `700 19px ${TYPE}`; g.fillText('Somebody killed all these projects. The commit log says it was you.', W/2 + 40, 1);
   g.restore();
   g.fillStyle = '#ece7da'; g.textAlign = 'center'; g.font = `700 17px ${TYPE}`;
@@ -1028,6 +1231,7 @@ async function openSuspect(name, fresh){
 }
 function render(name){
   const out = document.getElementById('out'); const note = document.getElementById('notice'); note.textContent = '';
+  document.body.classList.add('has-case');
   if (name === '#strangers') {
     const cs = DATA.strangers.map(r => analyze(r, null));
     out.innerHTML = ''; out.appendChild(stack(cs, `${cs.length} STRANGERS · OWNERS WITHHELD`, {thoughts: thoughts(cs)}));
