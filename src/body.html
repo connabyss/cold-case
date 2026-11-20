@@ -229,7 +229,7 @@ function stack(cases, label, opts={}){
   draw(); return box;
 }
 
-// the theatre: slide the folder in, type each clue, then slam the ruling
+// the theater: slide the folder in, type each clue, then slam the ruling
 const calm = matchMedia('(prefers-reduced-motion: reduce)').matches;
 function shake(){ if (calm) return; document.body.classList.remove('shake'); void document.body.offsetWidth; document.body.classList.add('shake'); }
 function play(f, dir){
