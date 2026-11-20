@@ -260,7 +260,7 @@ p.reopen{margin:14px 0 0;display:flex;gap:12px;align-items:center;flex-wrap:wrap
 @keyframes slam2{0%{transform:translate(-50%,-50%) scale(3) rotate(20deg);opacity:0}70%{transform:translate(-50%,-50%) scale(.95) rotate(9deg)}100%{transform:translate(-50%,-50%) rotate(9deg);opacity:.9}}
 @keyframes slam3{0%{transform:translate(-50%,-50%) scale(3) rotate(-14deg);opacity:0}70%{transform:translate(-50%,-50%) scale(.95) rotate(-4deg)}100%{transform:translate(-50%,-50%) rotate(-4deg);opacity:.9}}
 
-/* the theatre */
+/* the theater */
 .wait{opacity:0}
 .witness,.last,.funeral,.ruling{transition:opacity .35s}
 @keyframes inR{from{transform:translateX(60px) rotate(2deg);opacity:0}to{transform:none;opacity:1}}
@@ -1103,7 +1103,7 @@ function stack(cases, label, opts={}){
   draw(); return box;
 }
 
-// the theatre: slide the folder in, type each clue, then slam the ruling
+// the theater: slide the folder in, type each clue, then slam the ruling
 const calm = matchMedia('(prefers-reduced-motion: reduce)').matches;
 function shake(){ if (calm) return; document.body.classList.remove('shake'); void document.body.offsetWidth; document.body.classList.add('shake'); }
 function play(f, dir){
