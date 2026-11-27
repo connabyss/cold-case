@@ -32,10 +32,10 @@ function funerals(c){
 function funeral(c){ const v = funerals(c); return v[hash(c.repo.name + 'fun') % v.length]; }
 
 // The facts a line leans on, so one card never states the same number twice.
-const facts = t => (t.replace(/<[^>]+>/g,'').match(/\b\d[\d,.]*\s(second|minute|hour|day|month|year)s?\b|\ba second\b/g) || []).map(k => k.replace(/s$/,''));
+const facts = t => (untag(t).match(/\b\d[\d,.]*\s(second|minute|hour|day|month|year)s?\b|\ba second\b/g) || []).map(k => k.replace(/s$/,''));
 
 // Page-level variety: the same joke twice in a row stops being a joke.
-const ckey = t => t.replace(/<[^>]+>/g,'').replace(/“[^”]*”/g,'Q').replace(/\d[\d:,.]*\s?(AM|PM)?/g,'#').slice(0,16);
+const ckey = t => untag(t).replace(/“[^”]*”/g,'Q').replace(/\d[\d:,.]*\s?(AM|PM)?/g,'#').slice(0,16);
 function vary(cases){
   const seen = {}, wseen = {}, fseen = {}, rseen = {}; let prevRuling = '';
   for (const c of cases) {

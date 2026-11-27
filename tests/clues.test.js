@@ -13,7 +13,7 @@ const SPAN = /\b\d[\d,.]*\s(second|minute|hour|day|month|year)s?\b/g;
   const fail = (s, c, why) => { fails++; console.log(`FAIL ${s}/${c.name}: ${why}\n  ` + c.clues.join('\n  ') + (c.fun ? '\n  funeral: ' + c.fun : '')); };
   for (const s of fixtures) {
     const cases = await p.evaluate(s => { const dead = s.repos.map(r => analyze(r, s)).filter(c => c.dead); vary(dead);
-      return dead.map(c => ({name: c.repo.name, clues: c.clues.map(x => x.text.replace(/<[^>]+>/g,'')), wit: c.wit ? c.wit.text : '', fun: c.fun || ''})); }, s);
+      return dead.map(c => ({name: c.repo.name, clues: c.clues.map(x => untag(x.text)), wit: c.wit ? c.wit.text : '', fun: c.fun || ''})); }, s);
     for (const c of cases) {
       checked++;
       // the same time span ("58 minutes") on two clues of one card is one fact told twice
@@ -79,6 +79,16 @@ const SPAN = /\b\d[\d,.]*\s(second|minute|hour|day|month|year)s?\b/g;
     await m.evaluate(() => { court('connabyss', [{repo: {name: 'x', commits: [1]}, born: {date: '2026-01-01T00:00:00Z'}}], [], document.getElementById('out')); document.querySelector('[data-plea="tomorrow"]').click(); });
     check(await m.evaluate(() => document.body.classList.contains('reopen') && getComputedStyle(document.body).display === 'block'), '"tomorrow" changed the page layout (body.reopen picked up p.reopen styles)');
     await m.close();
+  }
+  // CodeQL alerts (2026-11-27): tag stripping must not leave a tag behind, and error text never goes in as HTML
+  {
+    const check = (ok, why) => { checked++; if (!ok) { fails++; console.log('FAIL security: ' + why); } };
+    const sp = await b.newPage(); await sp.route('**/*', r => r.request().url().startsWith('file:') ? r.continue() : r.abort()); await sp.goto('file://' + page);
+    check(await sp.evaluate(() => typeof untag === 'function' && untag('<b>dead</b> code') === 'dead code' && ['<<b>b>x<i>', '<scr<b>ipt>', '<a<b>>c'].every(t => !/<[^>]*>/.test(untag(t)))), 'untag leaves no tag behind');
+    const src = ['body.html', 'extras.js', 'lib.js', 'live.js', 'share.js'].map(f => fs.readFileSync(path.join(__dirname, '..', 'src', f), 'utf8')).join('\n');
+    check(!/replace\(\/<\[\^>\]\+>\/g/.test(src), 'no one-pass tag stripping left in src/ (use untag)');
+    check(!/innerHTML[^;]*\$\{e\.message\}/.test(src), 'error text goes through esc() before innerHTML');
+    await sp.close();
   }
   await b.close();
   console.log(fails ? `${fails} problem(s) in ${checked} cases` : `ok: ${checked} cases`);
