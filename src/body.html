@@ -64,6 +64,8 @@ const DATA = __DATA__;
 const NOW = LIVE ? new Date() : new Date('2026-11-04T06:30:00Z');
 const H = 3600e3, D = 24*H;
 const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+// tags out, repeated until none are left, so a split tag like "<<b>b>" can't survive one pass
+const untag = t => { let p; do { p = t; t = t.replace(/<[^>]*>/g, ''); } while (t !== p); return t; };
 const q = s => '“' + esc(String(s).trim().replace(/[.!]+$/,'')) + '”';
 // commit dates keep the committer's own UTC offset: read the wall clock from the string itself
 function clock(iso){
@@ -313,7 +315,7 @@ async function compare(a, b){
   const box = document.getElementById('cmpout'); box.innerHTML = `<p class="thought">Pulling the file on ${esc(b)}…</p>`;
   let sb = DATA.suspects[b.toLowerCase()];
   if (!sb && LIVE) { try { sb = await loadSuspect(b); if (sb) DATA.suspects[b.toLowerCase()] = sb; }
-    catch(e) { box.innerHTML = `<p class="thought">${e instanceof Busy ? `GitHub's hourly limit is used up. Try again around ${e.message}.` : `Couldn't reach GitHub.`}</p>`; return; } }
+    catch(e) { box.innerHTML = `<p class="thought">${e instanceof Busy ? `GitHub's hourly limit is used up. Try again around ${esc(e.message)}.` : `Couldn't reach GitHub.`}</p>`; return; } }
   if (!sb) { box.innerHTML = `<p class="thought">No file on “${esc(b)}”.${LIVE ? '' : ' This preview only knows connabyss and the repeat offender (#suspect).'}</p>`; return; }
   const sa = DATA.suspects[a.toLowerCase()];
   const sum = (s, label) => { const all = s.repos.map(r => analyze(r, s)), dead = all.filter(c => c.dead);
@@ -415,7 +417,7 @@ function render(name){
     } catch(e) { lf.disabled = false; lf.textContent = 'SHOW WHO'; document.getElementById('notice').textContent = e instanceof Busy ? `GitHub's hourly limit is used up. It reopens around ${e.message}.` : `Couldn't reach GitHub.`; } };
   const mk = document.getElementById('mkcard');
   if (mk) mk.onclick = async () => { const label = mk.textContent; mk.disabled = true; mk.textContent = 'DEVELOPING…'; SFX.thud();
-    const ex = files[0] && files[0].clues[0] ? ['Exhibit A: ' + files[0].clues[0].text.replace(/<[^>]+>/g,'').replace(/&quot;/g,'"').replace(/&amp;/g,'&')] : [];
+    const ex = files[0] && files[0].clues[0] ? ['Exhibit A: ' + untag(files[0].clues[0].text).replace(/&quot;/g,'"').replace(/&amp;/g,'&')] : [];
     const url = await shareCard(s, shown, bodies, breathingN, mo.slice(0,2).concat(ex)); mk.disabled = false; mk.textContent = label; showCard(url, shown, bodies); };
   // big profiles: skip a file that would only repeat jokes already on the page (there are plenty more bodies)
   let files = dead; if (X) { vary(dead); files = dead.filter(c => !c.stale); if (!files.length) files = dead; }
